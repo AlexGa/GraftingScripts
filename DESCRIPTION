@@ -1,0 +1,20 @@
+Package: GraftingScripts
+Title: Reproducible scripts for studying the graft formation 
+Version: 0.0.0.9000
+Authors@R: person("Alexander", "Gabel", email = "alexander.gabel@informatik.uni-halle.de", role = c("aut", "cre"))
+Description: This is a small package allowing to reproduce the results from the manuscript 'Differential auxin and sugar responses are involved in tissue recognition and graft formation in Arabidopsis thaliana' by Charles Melnyk et al.
+Depends: R (>= 3.3.2)
+Imports: xlsx (>= 0.5.7),
+         RColorBrewer (>= 1.1-2),
+         biomartr (>= 0.4.0),
+         AnnotationDbi (>= 1.34.4),
+         GO.db (>= 3.3.0),
+         org.At.tair.db (>= 3.3.0),
+         GOstats (>= 2.38.1),
+         GSEABase (>= 1.34.1),
+         Category (>= 2.38.0)
+License: MIT + file LICENSE
+Encoding: UTF-8
+LazyData: true
+RoxygenNote: 6.0.1
+biocViews: 
