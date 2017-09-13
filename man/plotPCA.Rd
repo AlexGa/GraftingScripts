@@ -21,6 +21,10 @@ plotPCA(exp_data, groups, do.legend=F, plot_time_points=F, log=T, do.MDS=F, cols
 
 \item{cols}{character vector defining the colors to use for the different samples}
 
+\item{epsilon}{numeric value indicates pseudocount used if \code{log=TRUE}}
+
+\item{return_plotMatrix}{boolean value indicates if PCA or MDS results should be returned}
+
 \item{...}{optional plot parameters \link{plot}}
 }
 \value{
