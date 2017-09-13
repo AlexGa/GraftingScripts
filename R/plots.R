@@ -12,7 +12,7 @@
 #' @param ... optional plot parameters \link{plot}
 #' @return a \code{plot} 
 #' @export
-plot_colored_dendrogram <- function(exp_data,groups, method="pearson", link="average", do.legend=F, unClusteredBranchColor="black", legend.pos = "topright", ...){
+plot_colored_dendrogram <- function(exp_data, groups, method="pearson", link="average", do.legend=F, unClusteredBranchColor="black", legend.pos = "topright", ...){
   
   if(!is.factor(groups)){
     groups <- factor(groups)
@@ -234,10 +234,12 @@ plot_colored_dendrogram <- function(exp_data,groups, method="pearson", link="ave
 #' @param log boolean value defining if the expression data should be log transformed before the calculation of PCA or MDS
 #' @param do.MDS boolean value defines if PCA or MDS should be calculated. Default: TRUE
 #' @param cols character vector defining the colors to use for the different samples
+#' @param epsilon numeric value indicates pseudocount used if \code{log=TRUE} 
+#' @param return_plotMatrix boolean value indicates if PCA or MDS results should be returned 
 #' @param ... optional plot parameters \link{plot}
 #' @return a \code{matrix} 
 #' @export
-plotPCA <- function(exp_data, groups, do.legend=F, plot_time_points=F, log=T, do.MDS=F, cols=NULL,...){
+plotPCA <- function(exp_data, groups, do.legend=F, plot_time_points=F, log=T, do.MDS=F, cols=NULL, epsilon = 1, return_plotMatrix = FALSE, ...){
   
   if(!is.matrix(exp_data) && !is.data.frame(exp_data)){
     warning("exp_data has to be a matrix or data.frame.")
@@ -249,7 +251,7 @@ plotPCA <- function(exp_data, groups, do.legend=F, plot_time_points=F, log=T, do
   exp_data <- t(as.matrix(exp_data))
   
   if(log){
-    exp_data <- log(exp_data)
+    exp_data <- log(exp_data + epsilon)
   }
   
   scaling_mat <- c()
@@ -259,7 +261,6 @@ plotPCA <- function(exp_data, groups, do.legend=F, plot_time_points=F, log=T, do
     
     exp_dist <- dist(exp_data)
     scaling_mat <- cmdscale(exp_dist, eig=TRUE, k=2)
-    print(head(scaling_mat))
     x <- scaling_mat$points[,1]
     y <- scaling_mat$points[,2]
   }else{
@@ -274,7 +275,7 @@ plotPCA <- function(exp_data, groups, do.legend=F, plot_time_points=F, log=T, do
       cols <- rainbow(n = nSamples, alpha = 0.8)
     }else{
       cols <- RColorBrewer::brewer.pal(name = "Set1",n = nSamples)
-      cols <- alpha(cols,alpha = 0.8) 
+      cols <- scales::alpha(cols,alpha = 0.8) 
     }
   }
   
@@ -301,5 +302,8 @@ plotPCA <- function(exp_data, groups, do.legend=F, plot_time_points=F, log=T, do
     legend.text <- unique(unlist(lapply(strsplit(rownames(exp_data), split = " "), function(i)paste0(i[-1], collapse=" "))))
     legend("topleft", legend = legend.text, col = cols[1:nSamples], bty = "n", pch = 19, ncol=2, pt.cex = 2)    
   }
-  return(scaling_mat)
+  
+  if(return_plotMatrix){
+    return(scaling_mat)
+  }
 }
