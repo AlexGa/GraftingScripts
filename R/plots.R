@@ -265,7 +265,7 @@ plotPCA <- function(exp_data, groups, do.legend=F, plot_time_points=F, log=T, do
     y <- scaling_mat$points[,2]
   }else{
     
-    scaling_mat <- prcomp(x)
+    scaling_mat <- prcomp(exp_data)
     x <- scaling_mat$x[,1]
     y <- scaling_mat$x[,2]
   }
@@ -306,4 +306,50 @@ plotPCA <- function(exp_data, groups, do.legend=F, plot_time_points=F, log=T, do
   if(return_plotMatrix){
     return(scaling_mat)
   }
+}
+
+
+#' @title Barplot of up- and down- regulated differentially expressed genes 
+#' @description Plots the relative or absolute number of up- and down- regulated genes and a asterisks if the ratio is significant 
+#' @author Alexander Gabel
+#' @usage barplot_up_down(up_mat, down_mat, p_val_mat, names.arg, main, labels)
+#' @param up_mat,down_mat (relative) number of up or down regulated genes
+#' @param p_val_mat matrix of p-values for each time point and each treatment. Indicating if ratio of up- and down- regulated genes is significant compared to the background.
+#' @param ylim defines the limits of the y-axis
+#' @param names.arg defines the names of the bars. Details: \link{barplot}
+#' @param main defines the title of the plot
+#' @param labels defines the labels of the x-axis
+#' @param ylab defines the label of the y-axis
+#' @return a barplot 
+#' @export
+barplot_up_down <- function(up_mat, down_mat, p_val_mat, ylim = c(-1.2,1.45), names.arg, main, labels, ylab="Proportion of overlap"){
+  
+  bar.coords <- barplot(up_mat, col = "green4", beside = T, las = 2, ylim = ylim, main = main, names.arg = names.arg, ylab = "")
+  barplot(down_mat, col="red4", beside=T, add=T, yaxt="n", xaxt="n")
+  
+  mtext(text = ylab, side = 2, line = 2.75, at = 0, cex=1.5)
+  text(x = bar.coords[4,], y=1.28, labels = labels)
+  
+  star.line.coords <- apply(up_mat, 2, function(up_row){
+    line_coords <- c()
+    if(max(up_row) + 0.1 > 0.5){
+      line_coords <- rep(max(up_row) + 0.1, length(up_row))
+    }else{
+      line_coords <- rep(0.5, length(up_row))
+    }
+  })
+  
+  if(sum(t(p_val_mat) < 0.05) > 0){
+    text(x = bar.coords[t(p_val_mat) < 0.05], y = star.line.coords[t(p_val_mat) < 0.05], labels = "*")
+  }
+  
+  abline(h = 0)
+  vert_line_coords <- as.vector(bar.coords[c(1,8),])
+  vert_line_coords <- vert_line_coords[c(-1,-length(vert_line_coords))]
+  vert_line_coords <- matrix(data = vert_line_coords,nrow = 2,ncol = 3,byrow = F)
+  vert_line_coords <- apply(vert_line_coords,2,function(i){
+    i[1] + (diff(i)/2)
+  })
+  abline(v = vert_line_coords,lty=2)
+  legend("bottomleft",legend = c("DEG up", "DEG down"),fill=c("green4","red4"),cex = 0.75)
 }
