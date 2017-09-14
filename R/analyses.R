@@ -146,3 +146,34 @@ Compute_GO_Enrichment <- function(geneUniverse, selectedGeneIds, pvalueCutoff=0.
   return(list( over.df,over.df[over.df$'Pvalue.adjusted' < pvalueCutoff,]))
   
 }
+
+#' @title Adjust list of p-value matrices
+#' @description Adjusts all p-values in the list and separates them finally into the same matrix structure
+#' @author Alexander Gabel
+#' @usage adjust_and_split(p_val_list, adjust_method="BY")
+#' @param p_val_list list of matrices containing uncorrected p-vales
+#' @param adjust_method method for p-value correction. Default: "BY". For details see \link{p.adjust}
+#' @return a \code{list} 
+#' @export
+adjust_and_split <- function(p_val_list, adjust_method="BY"){
+  
+  if(!is.list(p_val_list)){
+    stop("Please check p_val_list. It has to be a list.")
+  }
+  
+  if(!is.matrix(p_val_list[[1]])){
+    stop("Please check p_val_list. Its elements have to be matrices.")
+  }
+  
+  mat_rows <- nrow(p_val_list[[1]])
+  mat_cols <- ncol(p_val_list[[1]])
+  
+  adjusted_p_vals_vec <- p.adjust(unlist(p_val_list), method = adjust_method)
+  adjusted_p_vals_mat <- matrix(nrow=mat_rows, adjusted_p_vals_vec)
+  
+  adjusted_p_mat_list <- lapply(seq(1, ncol(adjusted_p_vals_mat)-mat_cols+1, mat_cols), 
+                                function(i){ adjusted_p_vals_mat[,i:(i+mat_cols-1)] }
+                               )
+  names(adjusted_p_mat_list) <- names(p_val_list)
+  return(adjusted_p_mat_list)
+}
