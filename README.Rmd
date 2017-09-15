@@ -133,15 +133,21 @@ names(gene_lists) <- sheet_names
 
 ### Calculate transcriptional overlap plots and check significance
 ```r
- set.seed(10)
- gene_lists[[length(gene_lists)+1]] <- sample(250, x=rownames(exp.data))
- gene_lists[[length(gene_lists)+1]] <- sample(500, x=rownames(exp.data))
+
+data(exp.data)
+data(fc.list)
+data(ml.list.down)
+data(ml.list.up)
+
+set.seed(10)
+gene_lists[[length(gene_lists)+1]] <- sample(250, x=rownames(exp.data))
+gene_lists[[length(gene_lists)+1]] <- sample(500, x=rownames(exp.data))
  
- names(gene_lists)[(length(gene_lists)-1):(length(gene_lists))] <- c("250_random","500_random")
+names(gene_lists)[(length(gene_lists)-1):(length(gene_lists))] <- c("250_random","500_random")
 
 for(fc in 1:3){
   
-  plot_dir <- paste0("Histogram_abs_logfc_gt_",fc,"_and_ML_gt_0.9_relative_BY")
+  plot_dir <- paste0("Histogram_abs_logfc_gt_",fc,"_and_ML_gt_0.9")
   
   if(!file.exists(plot_dir)){
     dir.create(plot_dir)
