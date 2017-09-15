@@ -195,3 +195,69 @@ for(fc in 1:3){
   }
 }
 ```
+
+### Defining symmetrically and asymmetrically expressed genes (Table 1)
+```r
+# load genes that are symmetrically or asymmetrically expressed based on BaySeq filtering
+data(atg_list)
+data(exp.data)
+number_genes <- nrow(exp.data)
+
+p.val.mat <- matrix(nrow=length(group.names), ncol=length(atg_list))
+exp_num_overlap_genes <- obs_num_overlap_genes <- matrix(nrow=length(group.names), ncol=length(atg_list))
+num_genes_overlap <- c()
+num_gene_atg_list <- unlist(lapply(atg_list, length))
+
+for(i in seq_along(gene_lists)){
+
+  glist_name <- names(gene_lists)[i]
+  gset <- gene_lists[i]
+  
+  for(j in seq_along(atg_list)){
+    N.table <- matrix(c(number_genes - length(unique(c(atg_list[[j]], gene_lists[[i]]))), length(setdiff(sort(gene_lists[[i]]), sort(atg_list[[j]]))),
+                        length(setdiff(sort(atg_list[[j]]), sort(gene_lists[[i]]))), length(intersect(sort(gene_lists[[i]]), sort(atg_list[[j]])))),nrow=2 )
+
+    p.val.mat[i,j] <- fisher.test(N.table,simulate.p.value = F,alternative = "greater")$p.value
+    exp_num_overlap_genes[i,j] <- length(gene_lists[[i]]) * length(atg_list[[j]]) / number_genes
+    obs_num_overlap_genes[i,j] <- length(intersect(sort(gene_lists[[i]]), sort(atg_list[[j]])))
+  }
+}
+
+sym_asym_table_list <- list()
+
+for(i in seq_along(group.names)){
+
+  sym <- data.frame(HAG=unlist(lapply(strsplit(x=grep(x = colnames(obs_num_overlap_genes), pattern = "Symm", value=T), split = "_"), function(i)i[1]))[-(1:8)],
+                    Treatment=rep(num_genes_overlap[group.names[i]],8),
+                    'Graft Bottom = Top' = num_gene_atg_list[grepl(x = colnames(obs_num_overlap_genes), pattern = "Symm")][-(1:8)],
+                    Overlap=obs_num_overlap_genes[group.names[i],grepl(x = colnames(obs_num_overlap_genes), pattern = "Symm")][-(1:8)], check.names = F)
+  sym <- data.frame(sym, '%' = round((sym$Overlap/sym$`Graft Bottom = Top`)*100), check.names=F )
+  
+  sig_overlap <- p.adjusted.mat[group.names[i], grepl(x = colnames(obs_num_overlap_genes), pattern = "Symm")][-(1:8)]<0.05
+  sym$`%`[sig_overlap] <- paste0(sym$`%`[sig_overlap], "*")
+  
+  bGt <- data.frame(HAG=unlist(lapply(strsplit(x=grep(x = colnames(obs_num_overlap_genes), pattern = "Asym_bGt", value=T), split = "_"), function(i)i[1])),
+                    Treatment=rep(num_genes_overlap[group.names[i]],8),
+                    'Graft Bottom > Top' = num_gene_atg_list[grepl(x = colnames(obs_num_overlap_genes), pattern = "Asym_bGt")],
+                    Overlap=obs_num_overlap_genes[group.names[i],grepl(x = colnames(obs_num_overlap_genes), pattern = "Asym_bGt")], check.names = F)
+  bGt <- data.frame(bGt, '%' = round((bGt$Overlap/bGt$`Graft Bottom > Top`)*100), check.names=F )
+  
+  sig_overlap <- p.adjusted.mat[group.names[i], grepl(x = colnames(obs_num_overlap_genes), pattern = "Asym_bGt")]<0.05
+  bGt$`%`[sig_overlap] <- paste0(bGt$`%`[sig_overlap], "*")
+  
+  tGb <- data.frame(HAG=unlist(lapply(strsplit(x=grep(x = colnames(obs_num_overlap_genes), pattern = "Asym_tGb", value=T), split = "_"), function(i)i[1])),
+                    Treatment=rep(num_genes_overlap[group.names[i]],8),
+                    'Graft Top > Bottom' = num_gene_atg_list[grepl(x = colnames(obs_num_overlap_genes), pattern = "Asym_tGb")],
+                    Overlap=obs_num_overlap_genes[group.names[i],grepl(x = colnames(obs_num_overlap_genes), pattern = "Asym_tGb")], check.names = F)
+  tGb <- data.frame(tGb, '%' = round((tGb$Overlap/tGb$`Graft Top > Bottom`)*100), check.names=F )
+  
+  sig_overlap <- p.adjusted.mat[group.names[i], grepl(x = colnames(obs_num_overlap_genes), pattern = "Asym_tGb")]<0.05
+  tGb$`%`[sig_overlap] <- paste0(tGb$`%`[sig_overlap], "*")
+  
+  colnames(sym)[2] <- colnames(bGt)[2] <- colnames(tGb)[2] <- group.names[i]
+  
+  sym_asym_table_list[[i]] <- data.frame(sym, tGb, bGt, check.names=F)
+}
+names(sym_asym_table_list) <- group.names
+
+```
