@@ -172,3 +172,95 @@ for(fc in 1:3){
   }
 }
 ```
+
+### Defining symmetrically and asymmetrically expressed genes (Table 1)
+
+``` r
+# load genes that are symmetrically or asymmetrically expressed based on BaySeq filtering
+data(atg_list)
+data(exp.data)
+data(gene_lists)
+number_genes <- nrow(exp.data)
+
+p.val.mat <- exp_num_overlap_genes <- obs_num_overlap_genes <- matrix(nrow=length(gene_lists), ncol=length(atg_list))
+num_genes_overlap <- c()
+num_gene_atg_list <- unlist(lapply(atg_list, length))
+
+tmp <- do.call(rbind, lapply(gene_lists, function(gset){
+
+  unlist(lapply(atg_list, function(atg_set){
+    obs_num_overlap_genes <- length(intersect(sort(gset), sort(atg_set)))
+    N.table <- matrix(nrow = 2, c(number_genes - length(unique(c(atg_set, gset))), 
+                        length(setdiff(sort(gset), sort(atg_set))),
+                        length(setdiff(sort(atg_set), sort(gset))), 
+                        obs_num_overlap_genes))
+     p.val.mat <- fisher.test(N.table, alternative = "greater")$p.value
+  }))
+}))
+
+for(i in seq_along(gene_lists)){
+
+  glist_name <- names(gene_lists)[i]
+  gset <- gene_lists[i]
+  
+  print(glist_name)
+  for(j in seq_along(atg_list)){
+  
+    obs_num_overlap_genes[i,j] <- length(intersect(sort(gene_lists[[i]]), sort(atg_list[[j]])))
+    N.table <- matrix(nrow = 2, c(number_genes - length(unique(c(atg_list[[j]], gene_lists[[i]]))), 
+                        length(setdiff(sort(gene_lists[[i]]), sort(atg_list[[j]]))),
+                        length(setdiff(sort(atg_list[[j]]), sort(gene_lists[[i]]))), 
+                        obs_num_overlap_genes[i,j]))
+
+    p.val.mat[i,j] <- fisher.test(N.table, alternative = "greater")$p.value
+  }
+}
+colnames(p.val.mat) <- names(atg_list)
+rownames(p.val.mat) <- names(gene_lists)
+
+# Correction of p-values
+p.adjusted.mat <- matrix(nrow = nrow(p.val.mat), ncol = ncol(p.val.mat), p.adjust(p.val.mat, method = "BY")) 
+
+rownames(p.adjusted.mat) <- rownames(p.val.mat)
+colnames(p.adjusted.mat) <- colnames(p.val.mat)
+
+# Summarizing the results, equivalent to Table 1
+baySeq_conditions <- c("Asym_bGt", "Asym_tGb", "Symm")
+names(baySeq_conditions) <- c("Graft Bottom > Top", "Graft Top > Bottom", "Graft Bottom = Top")
+
+sym_asym_table_list <- list()
+
+for(i in seq_along(gene_lists)){
+  
+  glist_name <- names(gene_lists)[i]
+  
+  cond_list <- list()
+  for(cond in seq_along(baySeq_conditions)){
+  
+    indices <- grepl(x = colnames(p.adjusted.mat), pattern = baySeq_conditions[cond])
+    cond_list[[cond]] <- data.frame(HAG=unlist(lapply(strsplit(x = grep(x = colnames(p.adjusted.mat), pattern = baySeq_conditions[cond], value = T), 
+                                                               split = "_"), function(c_name)c_name[1])),
+                                    Treatment = rep(length(gene_lists[[i]]),8),
+                                    baySeq_Condition = num_gene_atg_list[indices],
+                                    Overlap = obs_num_overlap_genes[i, indices], 
+                                    check.names = F)
+    cond_list[[cond]] <- data.frame(cond_list[[cond]], '%' = round((cond_list[[cond]]$Overlap/cond_list[[cond]]$baySeq_Condition)*100), check.names=F )
+    sig_overlap <- p.adjusted.mat[i,indices] < 0.05
+    cond_list[[cond]]$`%`[sig_overlap] <- paste0(cond_list[[cond]]$`%`[sig_overlap], "*")  
+    colnames(cond_list[[cond]])[2:3] <- c(names(gene_lists)[i],names(baySeq_conditions)[cond])
+  }
+   sym_asym_table_list[[i]] <- data.frame(cond_list, check.names=F)
+}
+names(sym_asym_table_list) <- names(gene_lists)
+```
+
+| HAG |  S2\_S3h\_CSt3h\_down|  Graft Bottom &gt; Top|  Overlap| %    | HAG |  S2\_S3h\_CSt3h\_down|  Graft Top &gt; Bottom|  Overlap| %   | HAG |  S2\_S3h\_CSt3h\_down|  Graft Bottom = Top|  Overlap| %   |
+|:----|---------------------:|----------------------:|--------:|:-----|:----|---------------------:|----------------------:|--------:|:----|:----|---------------------:|-------------------:|--------:|:----|
+| 6   |                  1998|                   4971|     1563| 31\* | 6   |                  1998|                   6679|       53| 1   | 6   |                  1998|                4988|      107| 2   |
+| 12  |                  1998|                   5657|     1526| 27\* | 12  |                  1998|                   7111|      112| 2   | 12  |                  1998|                3473|       68| 2   |
+| 24  |                  1998|                   4942|     1525| 31\* | 24  |                  1998|                   6873|       72| 1   | 24  |                  1998|                4135|       88| 2   |
+| 48  |                  1998|                   4915|     1427| 29\* | 48  |                  1998|                   6601|       93| 1   | 48  |                  1998|                3689|      113| 3   |
+| 72  |                  1998|                   2019|      538| 27\* | 72  |                  1998|                   2459|      111| 5   | 72  |                  1998|               10421|      530| 5   |
+| 120 |                  1998|                    941|      210| 22\* | 120 |                  1998|                   1510|       84| 6   | 120 |                  1998|               15012|      979| 7   |
+| 168 |                  1998|                    339|       26| 8    | 168 |                  1998|                    464|       25| 5   | 168 |                  1998|               20620|     1615| 8\* |
+| 240 |                  1998|                    230|       26| 11   | 240 |                  1998|                    321|       32| 10  | 240 |                  1998|               22586|     1736| 8\* |

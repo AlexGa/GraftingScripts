@@ -201,11 +201,10 @@ for(fc in 1:3){
 # load genes that are symmetrically or asymmetrically expressed based on BaySeq filtering
 data(atg_list)
 data(exp.data)
+data(gene_lists)
 number_genes <- nrow(exp.data)
 
-p.val.mat <- matrix(nrow=length(group.names), ncol=length(atg_list))
-exp_num_overlap_genes <- obs_num_overlap_genes <- matrix(nrow=length(group.names), ncol=length(atg_list))
-num_genes_overlap <- c()
+p.val.mat <- exp_num_overlap_genes <- obs_num_overlap_genes <- matrix(nrow=length(gene_lists), ncol=length(atg_list))
 num_gene_atg_list <- unlist(lapply(atg_list, length))
 
 for(i in seq_along(gene_lists)){
@@ -213,51 +212,60 @@ for(i in seq_along(gene_lists)){
   glist_name <- names(gene_lists)[i]
   gset <- gene_lists[i]
   
+  print(glist_name)
   for(j in seq_along(atg_list)){
-    N.table <- matrix(c(number_genes - length(unique(c(atg_list[[j]], gene_lists[[i]]))), length(setdiff(sort(gene_lists[[i]]), sort(atg_list[[j]]))),
-                        length(setdiff(sort(atg_list[[j]]), sort(gene_lists[[i]]))), length(intersect(sort(gene_lists[[i]]), sort(atg_list[[j]])))),nrow=2 )
-
-    p.val.mat[i,j] <- fisher.test(N.table,simulate.p.value = F,alternative = "greater")$p.value
-    exp_num_overlap_genes[i,j] <- length(gene_lists[[i]]) * length(atg_list[[j]]) / number_genes
+  
     obs_num_overlap_genes[i,j] <- length(intersect(sort(gene_lists[[i]]), sort(atg_list[[j]])))
+    N.table <- matrix(nrow = 2, c(number_genes - length(unique(c(atg_list[[j]], gene_lists[[i]]))), 
+                        length(setdiff(sort(gene_lists[[i]]), sort(atg_list[[j]]))),
+                        length(setdiff(sort(atg_list[[j]]), sort(gene_lists[[i]]))), 
+                        obs_num_overlap_genes[i,j]))
+
+    p.val.mat[i,j] <- fisher.test(N.table, alternative = "greater")$p.value
   }
 }
+colnames(p.val.mat) <- names(atg_list)
+rownames(p.val.mat) <- names(gene_lists)
+
+# Correction of p-values
+p.adjusted.mat <- matrix(nrow = nrow(p.val.mat), ncol = ncol(p.val.mat), p.adjust(p.val.mat, method = "BY")) 
+
+rownames(p.adjusted.mat) <- rownames(p.val.mat)
+colnames(p.adjusted.mat) <- colnames(p.val.mat)
+
+# Summarizing the results, equivalent to Table 1
+baySeq_conditions <- c( "Symm", "Asym_tGb", "Asym_bGt")
+names(baySeq_conditions) <- c("Graft Bottom = Top", "Graft Top > Bottom", "Graft Bottom > Top")
 
 sym_asym_table_list <- list()
 
-for(i in seq_along(group.names)){
-
-  sym <- data.frame(HAG=unlist(lapply(strsplit(x=grep(x = colnames(obs_num_overlap_genes), pattern = "Symm", value=T), split = "_"), function(i)i[1]))[-(1:8)],
-                    Treatment=rep(num_genes_overlap[group.names[i]],8),
-                    'Graft Bottom = Top' = num_gene_atg_list[grepl(x = colnames(obs_num_overlap_genes), pattern = "Symm")][-(1:8)],
-                    Overlap=obs_num_overlap_genes[group.names[i],grepl(x = colnames(obs_num_overlap_genes), pattern = "Symm")][-(1:8)], check.names = F)
-  sym <- data.frame(sym, '%' = round((sym$Overlap/sym$`Graft Bottom = Top`)*100), check.names=F )
+for(i in seq_along(gene_lists)){
   
-  sig_overlap <- p.adjusted.mat[group.names[i], grepl(x = colnames(obs_num_overlap_genes), pattern = "Symm")][-(1:8)]<0.05
-  sym$`%`[sig_overlap] <- paste0(sym$`%`[sig_overlap], "*")
+  glist_name <- names(gene_lists)[i]
   
-  bGt <- data.frame(HAG=unlist(lapply(strsplit(x=grep(x = colnames(obs_num_overlap_genes), pattern = "Asym_bGt", value=T), split = "_"), function(i)i[1])),
-                    Treatment=rep(num_genes_overlap[group.names[i]],8),
-                    'Graft Bottom > Top' = num_gene_atg_list[grepl(x = colnames(obs_num_overlap_genes), pattern = "Asym_bGt")],
-                    Overlap=obs_num_overlap_genes[group.names[i],grepl(x = colnames(obs_num_overlap_genes), pattern = "Asym_bGt")], check.names = F)
-  bGt <- data.frame(bGt, '%' = round((bGt$Overlap/bGt$`Graft Bottom > Top`)*100), check.names=F )
+  cond_list <- list()
+  for(cond in seq_along(baySeq_conditions)){
   
-  sig_overlap <- p.adjusted.mat[group.names[i], grepl(x = colnames(obs_num_overlap_genes), pattern = "Asym_bGt")]<0.05
-  bGt$`%`[sig_overlap] <- paste0(bGt$`%`[sig_overlap], "*")
-  
-  tGb <- data.frame(HAG=unlist(lapply(strsplit(x=grep(x = colnames(obs_num_overlap_genes), pattern = "Asym_tGb", value=T), split = "_"), function(i)i[1])),
-                    Treatment=rep(num_genes_overlap[group.names[i]],8),
-                    'Graft Top > Bottom' = num_gene_atg_list[grepl(x = colnames(obs_num_overlap_genes), pattern = "Asym_tGb")],
-                    Overlap=obs_num_overlap_genes[group.names[i],grepl(x = colnames(obs_num_overlap_genes), pattern = "Asym_tGb")], check.names = F)
-  tGb <- data.frame(tGb, '%' = round((tGb$Overlap/tGb$`Graft Top > Bottom`)*100), check.names=F )
-  
-  sig_overlap <- p.adjusted.mat[group.names[i], grepl(x = colnames(obs_num_overlap_genes), pattern = "Asym_tGb")]<0.05
-  tGb$`%`[sig_overlap] <- paste0(tGb$`%`[sig_overlap], "*")
-  
-  colnames(sym)[2] <- colnames(bGt)[2] <- colnames(tGb)[2] <- group.names[i]
-  
-  sym_asym_table_list[[i]] <- data.frame(sym, tGb, bGt, check.names=F)
+    indices <- grepl(x = colnames(p.adjusted.mat), pattern = baySeq_conditions[cond])
+    cond_list[[cond]] <- data.frame(HAG=unlist(lapply(strsplit(x = grep(x = colnames(p.adjusted.mat), pattern = baySeq_conditions[cond], value = T), 
+                                                               split = "_"), function(c_name)c_name[1])),
+                                    Treatment = rep(length(gene_lists[[i]]),8),
+                                    baySeq_Condition = num_gene_atg_list[indices],
+                                    Overlap = obs_num_overlap_genes[i, indices], 
+                                    check.names = F)
+    cond_list[[cond]] <- data.frame(cond_list[[cond]], '%' = round((cond_list[[cond]]$Overlap/cond_list[[cond]]$baySeq_Condition)*100), check.names=F )
+    sig_overlap <- p.adjusted.mat[i,indices] < 0.05
+    cond_list[[cond]]$`%`[sig_overlap] <- paste0(cond_list[[cond]]$`%`[sig_overlap], "*")  
+    colnames(cond_list[[cond]])[2:3] <- c(names(gene_lists)[i],names(baySeq_conditions)[cond])
+  }
+   sym_asym_table_list[[i]] <- data.frame(cond_list, check.names=F)
 }
-names(sym_asym_table_list) <- group.names
-
+names(sym_asym_table_list) <- names(gene_lists)
+devtools::use_data(sym_asym_table_list)
 ```
+
+```{r results="asis", echo = FALSE}
+data(sym_asym_table_list)
+knitr::kable(sym_asym_table_list$S2_S3h_CSt3h_down, caption = "Table 1", row.names = F,)
+```
+
