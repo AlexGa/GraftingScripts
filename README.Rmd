@@ -333,5 +333,5 @@ for(i in seq_along(intersect_lists)){
 ```{r echo = FALSE}
 data(intersect_lists_graft_formation)
 par(mar=c(2.1,3.1,3.1,.1), xpd=F, mgp=c(2,1,0), cex=1.25)
-GraftingScripts::barplot_graft_formation(count_mat = intersect_lists_graft_formation[[1]][[1]], pval_mat = intersect_lists_graft_formation[[1]][[3]], main = names(intersect_lists_graft_formation)[3])
+GraftingScripts::barplot_graft_formation(count_mat = intersect_lists_graft_formation[[1]][[1]], pval_mat = intersect_lists_graft_formation[[1]][[3]], main = names(intersect_lists_graft_formation)[1])
 ```

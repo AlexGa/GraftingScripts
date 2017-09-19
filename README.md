@@ -307,7 +307,8 @@ names(adjusted_p_mat_list) <- names(graft_gene_lists)
 
 for(i in seq_along(intersect_lists)){
   #par(mar=c(3.1,3.1,3.1,.1), xpd=F, mgp=c(2,1,0), cex=1.5)
-  GraftingScripts::barplot_graft_formation(count_mat = intersect_lists[[i]]$`Counts`, pval_mat = adjusted_p_mat_list[[i]], main = names(intersect_lists)[i])
+  GraftingScripts::barplot_graft_formation(count_mat = intersect_lists[[i]]$`Counts`, 
+                                           pval_mat = adjusted_p_mat_list[[i]], main = names(intersect_lists)[i])
   intersect_lists[[i]][[3]] <- adjusted_p_mat_list[[i]]
   names(intersect_lists[[i]])[3] <- "adjusted.Pvalues"
 }
