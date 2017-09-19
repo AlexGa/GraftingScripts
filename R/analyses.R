@@ -171,8 +171,15 @@ adjust_and_split <- function(p_val_list, adjust_method="BY"){
   adjusted_p_vals_vec <- p.adjust(unlist(p_val_list), method = adjust_method)
   adjusted_p_vals_mat <- matrix(nrow=mat_rows, adjusted_p_vals_vec)
   
+  j_mat <- 1
   adjusted_p_mat_list <- lapply(seq(1, ncol(adjusted_p_vals_mat)-mat_cols+1, mat_cols), 
-                                function(i){ adjusted_p_vals_mat[,i:(i+mat_cols-1)] }
+                                function(i){ 
+                                  mat <- adjusted_p_vals_mat[,i:(i+mat_cols-1)]
+                                  rownames(mat) <- rownames(p_val_list[[j_mat]])
+                                  colnames(mat) <- colnames(p_val_list[[j_mat]])
+                                  j_mat <<- j_mat + 1
+                                  mat
+                                  }
                                )
   names(adjusted_p_mat_list) <- names(p_val_list)
   return(adjusted_p_mat_list)

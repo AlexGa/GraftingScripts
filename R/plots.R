@@ -322,34 +322,18 @@ plotPCA <- function(exp_data, groups, do.legend=F, plot_time_points=F, log=T, do
 #' @param ylab defines the label of the y-axis
 #' @return a barplot 
 #' @export
-barplot_up_down <- function(up_mat, down_mat, p_val_mat, ylim = c(-1.2,1.45), names.arg, main, labels, ylab="Proportion of overlap"){
+barplot_graft_formation <- function(count_mat, pval_mat, ylab="# genes intersecting", main){
   
-  bar.coords <- barplot(up_mat, col = "green4", beside = T, las = 2, ylim = ylim, main = main, names.arg = names.arg, ylab = "")
-  barplot(down_mat, col="red4", beside=T, add=T, yaxt="n", xaxt="n")
+  ncols <- RColorBrewer::brewer.pal(n = nrow(count_mat), name="Set1")[c(3,1,2)]
+  y_lim <- c(0, max(count_mat)+max(count_mat)*0.25)
   
-  mtext(text = ylab, side = 2, line = 2.75, at = 0, cex=1.5)
-  text(x = bar.coords[4,], y=1.28, labels = labels)
+  b_plt <- barplot(count_mat, ylim=y_lim, beside = T, col = ncols, names = gsub(pattern = "_.+", replacement = "", x = colnames(count_mat)), ylab = ylab, main = main)
   
-  star.line.coords <- apply(up_mat, 2, function(up_row){
-    line_coords <- c()
-    if(max(up_row) + 0.1 > 0.5){
-      line_coords <- rep(max(up_row) + 0.1, length(up_row))
-    }else{
-      line_coords <- rep(0.5, length(up_row))
-    }
-  })
+  legend("topleft",legend = gsub(rownames(count_mat), pattern = "_", replacement = " & "), bty="n", fill = ncols)
   
-  if(sum(t(p_val_mat) < 0.05) > 0){
-    text(x = bar.coords[t(p_val_mat) < 0.05], y = star.line.coords[t(p_val_mat) < 0.05], labels = "*")
+  
+  if(sum(pval_mat < 0.05) > 0){
+    text(x = b_plt[pval_mat < 0.05], y=count_mat[pval_mat < 0.05], labels = "*", pos = 3) 
   }
   
-  abline(h = 0)
-  vert_line_coords <- as.vector(bar.coords[c(1,8),])
-  vert_line_coords <- vert_line_coords[c(-1,-length(vert_line_coords))]
-  vert_line_coords <- matrix(data = vert_line_coords,nrow = 2,ncol = 3,byrow = F)
-  vert_line_coords <- apply(vert_line_coords,2,function(i){
-    i[1] + (diff(i)/2)
-  })
-  abline(v = vert_line_coords,lty=2)
-  legend("bottomleft",legend = c("DEG up", "DEG down"),fill=c("green4","red4"),cex = 0.75)
 }

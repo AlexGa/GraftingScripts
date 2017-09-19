@@ -183,20 +183,7 @@ data(gene_lists)
 number_genes <- nrow(exp.data)
 
 p.val.mat <- exp_num_overlap_genes <- obs_num_overlap_genes <- matrix(nrow=length(gene_lists), ncol=length(atg_list))
-num_genes_overlap <- c()
 num_gene_atg_list <- unlist(lapply(atg_list, length))
-
-tmp <- do.call(rbind, lapply(gene_lists, function(gset){
-
-  unlist(lapply(atg_list, function(atg_set){
-    obs_num_overlap_genes <- length(intersect(sort(gset), sort(atg_set)))
-    N.table <- matrix(nrow = 2, c(number_genes - length(unique(c(atg_set, gset))), 
-                        length(setdiff(sort(gset), sort(atg_set))),
-                        length(setdiff(sort(atg_set), sort(gset))), 
-                        obs_num_overlap_genes))
-     p.val.mat <- fisher.test(N.table, alternative = "greater")$p.value
-  }))
-}))
 
 for(i in seq_along(gene_lists)){
 
@@ -225,8 +212,8 @@ rownames(p.adjusted.mat) <- rownames(p.val.mat)
 colnames(p.adjusted.mat) <- colnames(p.val.mat)
 
 # Summarizing the results, equivalent to Table 1
-baySeq_conditions <- c("Asym_bGt", "Asym_tGb", "Symm")
-names(baySeq_conditions) <- c("Graft Bottom > Top", "Graft Top > Bottom", "Graft Bottom = Top")
+baySeq_conditions <- c( "Symm", "Asym_tGb", "Asym_bGt")
+names(baySeq_conditions) <- c("Graft Bottom = Top", "Graft Top > Bottom", "Graft Bottom > Top")
 
 sym_asym_table_list <- list()
 
@@ -252,15 +239,78 @@ for(i in seq_along(gene_lists)){
    sym_asym_table_list[[i]] <- data.frame(cond_list, check.names=F)
 }
 names(sym_asym_table_list) <- names(gene_lists)
+devtools::use_data(sym_asym_table_list)
 ```
 
-| HAG |  S2\_S3h\_CSt3h\_down|  Graft Bottom &gt; Top|  Overlap| %    | HAG |  S2\_S3h\_CSt3h\_down|  Graft Top &gt; Bottom|  Overlap| %   | HAG |  S2\_S3h\_CSt3h\_down|  Graft Bottom = Top|  Overlap| %   |
-|:----|---------------------:|----------------------:|--------:|:-----|:----|---------------------:|----------------------:|--------:|:----|:----|---------------------:|-------------------:|--------:|:----|
-| 6   |                  1998|                   4971|     1563| 31\* | 6   |                  1998|                   6679|       53| 1   | 6   |                  1998|                4988|      107| 2   |
-| 12  |                  1998|                   5657|     1526| 27\* | 12  |                  1998|                   7111|      112| 2   | 12  |                  1998|                3473|       68| 2   |
-| 24  |                  1998|                   4942|     1525| 31\* | 24  |                  1998|                   6873|       72| 1   | 24  |                  1998|                4135|       88| 2   |
-| 48  |                  1998|                   4915|     1427| 29\* | 48  |                  1998|                   6601|       93| 1   | 48  |                  1998|                3689|      113| 3   |
-| 72  |                  1998|                   2019|      538| 27\* | 72  |                  1998|                   2459|      111| 5   | 72  |                  1998|               10421|      530| 5   |
-| 120 |                  1998|                    941|      210| 22\* | 120 |                  1998|                   1510|       84| 6   | 120 |                  1998|               15012|      979| 7   |
-| 168 |                  1998|                    339|       26| 8    | 168 |                  1998|                    464|       25| 5   | 168 |                  1998|               20620|     1615| 8\* |
-| 240 |                  1998|                    230|       26| 11   | 240 |                  1998|                    321|       32| 10  | 240 |                  1998|               22586|     1736| 8\* |
+| HAG |  S2\_S3h\_CSt3h\_down|  Graft Bottom = Top|  Overlap| %   | HAG |  S2\_S3h\_CSt3h\_down|  Graft Top &gt; Bottom|  Overlap| %   | HAG |  S2\_S3h\_CSt3h\_down|  Graft Bottom &gt; Top|  Overlap| %    |
+|:----|---------------------:|-------------------:|--------:|:----|:----|---------------------:|----------------------:|--------:|:----|:----|---------------------:|----------------------:|--------:|:-----|
+| 6   |                  1998|                4988|      107| 2   | 6   |                  1998|                   6679|       53| 1   | 6   |                  1998|                   4971|     1563| 31\* |
+| 12  |                  1998|                3473|       68| 2   | 12  |                  1998|                   7111|      112| 2   | 12  |                  1998|                   5657|     1526| 27\* |
+| 24  |                  1998|                4135|       88| 2   | 24  |                  1998|                   6873|       72| 1   | 24  |                  1998|                   4942|     1525| 31\* |
+| 48  |                  1998|                3689|      113| 3   | 48  |                  1998|                   6601|       93| 1   | 48  |                  1998|                   4915|     1427| 29\* |
+| 72  |                  1998|               10421|      530| 5   | 72  |                  1998|                   2459|      111| 5   | 72  |                  1998|                   2019|      538| 27\* |
+| 120 |                  1998|               15012|      979| 7   | 120 |                  1998|                   1510|       84| 6   | 120 |                  1998|                    941|      210| 22\* |
+| 168 |                  1998|               20620|     1615| 8\* | 168 |                  1998|                    464|       25| 5   | 168 |                  1998|                    339|       26| 8    |
+| 240 |                  1998|               22586|     1736| 8\* | 240 |                  1998|                    321|       32| 10  | 240 |                  1998|                    230|       26| 11   |
+
+### Expression of DEGs during graft formation
+
+``` r
+data(baySeq_grafting_lists)
+data(graft_gene_lists)
+data(exp.data)
+geneUniverse <- rownames(exp.data)
+intersect_lists <- list()
+for(i in seq_along(graft_gene_lists)){
+  
+  pub_gene_set <- graft_gene_lists[[i]]
+  
+  count_mat <- matrix(nrow=length(baySeq_grafting_lists), ncol=8) # 8 time points
+  pval_mat <- matrix(nrow=length(baySeq_grafting_lists), ncol=8)
+  col_names <- c()
+  intersect_lists[[i]] <- list()
+  
+  for(treat in seq_along(baySeq_grafting_lists)){
+  
+    sub_list <- baySeq_grafting_lists[[treat]]
+    cur_col <- 1
+    
+    merge_gene_ids <- c()
+    
+    for(j in seq_along(sub_list)){
+      
+      check_list <- list(sub_list[[j]], pub_gene_set)
+      names(check_list) <- c(names(sub_list)[j], names(graft_gene_lists)[i])
+      
+      inter_stats <- intersect.analysis(gene.list = check_list, geneUniverse = geneUniverse, alternative = "greater")
+      
+      count_mat[treat, j] <- inter_stats$stat[1]
+      pval_mat[treat, j] <- inter_stats$stat[2]
+      
+      if(treat == 1){
+        col_names <- c(col_names, paste0(names(sub_list)[j],"h_",names(graft_gene_lists)[i]))
+      }
+    }
+  }
+  
+  rownames(count_mat) <- rownames(pval_mat) <- names(baySeq_grafting_lists)
+  colnames(count_mat) <- colnames(pval_mat) <- col_names
+  
+  intersect_lists[[i]][[1]] <- count_mat
+  intersect_lists[[i]][[2]] <- pval_mat
+  names(intersect_lists[[i]]) <- c("Counts","Pvalues")
+}
+names(intersect_lists) <- names(graft_gene_lists)
+
+adjusted_p_mat_list <- GraftingScripts::adjust_and_split(lapply(intersect_lists, function(mat_list) mat_list[[2]]), "BY")
+names(adjusted_p_mat_list) <- names(graft_gene_lists)
+
+for(i in seq_along(intersect_lists)){
+  #par(mar=c(3.1,3.1,3.1,.1), xpd=F, mgp=c(2,1,0), cex=1.5)
+  GraftingScripts::barplot_graft_formation(count_mat = intersect_lists[[i]]$`Counts`, pval_mat = adjusted_p_mat_list[[i]], main = names(intersect_lists)[i])
+  intersect_lists[[i]][[3]] <- adjusted_p_mat_list[[i]]
+  names(intersect_lists[[i]])[3] <- "adjusted.Pvalues"
+}
+```
+
+![](README_files/figure-markdown_github/unnamed-chunk-4-1.png)
