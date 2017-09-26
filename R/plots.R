@@ -28,7 +28,7 @@ plot_colored_dendrogram <- function(exp_data, groups, method="pearson", link="av
   if(nCols <= 10){
     labelColors <- suppressWarnings(RColorBrewer::brewer.pal(name = "Set1",n = nCols))
   }else{
-    labelColors = rainbow(nCols)
+    labelColors <- rainbow(nCols)
   }
   
   j <- 0
@@ -226,7 +226,7 @@ plot_colored_dendrogram <- function(exp_data, groups, method="pearson", link="av
 #' @title Principle component analysis (PCA) or multidimensional scaling plot between samples
 #' @description Plot samples on a two-dimensional scatterplot in which the distances on the plot indicate the expression differences between the samples
 #' @author Alexander Gabel
-#' @usage plotPCA(exp_data, groups, do.legend=F, plot_time_points=F, log=T, do.MDS=F, cols=NULL, ...)
+#' @usage plotPCA(exp_data, groups, do.legend=F, plot_time_points=F, log=T, do.MDS=F, cols=NULL, epsilon = 1, return_plotMatrix = FALSE, ...)
 #' @param exp_data expression matrix, columns represent the samples and rows the genes (or transcripts)
 #' @param groups numeric vector describing the relationships of columns to certain groups (like biological replicates)
 #' @param do.legend boolean value defining if a color legend should be ploted
@@ -312,17 +312,15 @@ plotPCA <- function(exp_data, groups, do.legend=F, plot_time_points=F, log=T, do
 #' @title Barplot of up- and down- regulated differentially expressed genes 
 #' @description Plots the relative or absolute number of up- and down- regulated genes and a asterisks if the ratio is significant 
 #' @author Alexander Gabel
-#' @usage barplot_up_down(up_mat, down_mat, p_val_mat, names.arg, main, labels)
-#' @param up_mat,down_mat (relative) number of up or down regulated genes
-#' @param p_val_mat matrix of p-values for each time point and each treatment. Indicating if ratio of up- and down- regulated genes is significant compared to the background.
-#' @param ylim defines the limits of the y-axis
-#' @param names.arg defines the names of the bars. Details: \link{barplot}
+#' @usage barplot_graft_formation(count_mat, pval_mat, ylab="# genes intersecting", pval_threshold = 0.05, main)
+#' @param count_mat number of genes during each time point for each condition
+#' @param pval_mat matrix of p-values for each time point and each treatment. Indicating if ratio of up- and down- regulated genes is significant compared to the background.
+#' @param pval_threshold p-value threshold to indocate if a p-value is significant 
 #' @param main defines the title of the plot
-#' @param labels defines the labels of the x-axis
 #' @param ylab defines the label of the y-axis
 #' @return a barplot 
 #' @export
-barplot_graft_formation <- function(count_mat, pval_mat, ylab="# genes intersecting", main){
+barplot_graft_formation <- function(count_mat, pval_mat, ylab="# genes intersecting", pval_threshold = 0.05, main){
   
   ncols <- RColorBrewer::brewer.pal(n = nrow(count_mat), name="Set1")[c(3,1,2)]
   y_lim <- c(0, max(count_mat)+max(count_mat)*0.25)
@@ -332,8 +330,8 @@ barplot_graft_formation <- function(count_mat, pval_mat, ylab="# genes intersect
   legend("topleft",legend = gsub(rownames(count_mat), pattern = "_", replacement = " & "), bty="n", fill = ncols)
   
   
-  if(sum(pval_mat < 0.05) > 0){
-    text(x = b_plt[pval_mat < 0.05], y=count_mat[pval_mat < 0.05], labels = "*", pos = 3) 
+  if(sum(pval_mat < pval_threshold) > 0){
+    text(x = b_plt[pval_mat < pval_threshold], y=count_mat[pval_mat < pval_threshold], labels = "*", pos = 3) 
   }
   
 }

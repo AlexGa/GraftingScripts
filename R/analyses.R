@@ -115,6 +115,10 @@ do.fisher.test <- function(fc.list, fg.ids, ml.list.up, ml.list.down, fc.thresho
 #' @param pvalueCutoff numeric value defining the p-value cutoff for the adjusted p-values to call a GO term significantly enriched (default: 0.05)
 #' @param ontology character string defining the GO ontology and must be one of "BP", "CC", or "MF"
 #' @return a \code{list} 
+#' @import org.At.tair.db
+#' @import AnnotationDbi
+#' @import GSEABase
+#' @import Category
 #' @export
 Compute_GO_Enrichment <- function(geneUniverse, selectedGeneIds, pvalueCutoff=0.05, ontology="BP"){
   
@@ -124,26 +128,25 @@ Compute_GO_Enrichment <- function(geneUniverse, selectedGeneIds, pvalueCutoff=0.
   geneUniverse <- toupper(geneUniverse)
   selectedGeneIds <- toupper(selectedGeneIds)
   
-  frame <- AnnotationDbi::toTable(org.At.tair.db::org.At.tairGO)
+  frame <- toTable(org.At.tairGO)
   
-  goframeData = data.frame(frame$go_id, frame$Evidence, frame$gene_id)
-  goFrame = AnnotationDbi::GOFrame(goframeData, organism = "Arabidopsis thaliana")
+  goframeData <- data.frame(frame$go_id, frame$Evidence, frame$gene_id)
+  goFrame <- GOFrame(goframeData, organism = "Arabidopsis thaliana")
   
-  goAllFrame = AnnotationDbi::GOAllFrame(goFrame)
-  gsc <- GSEABase::GeneSetCollection(goAllFrame, setType = GSEABase::GOCollection())
-  params <- Category::GSEAGOHyperGParams("Arabidopsis thaliana GO", geneSetCollection = gsc, geneIds = selectedGeneIds, universeGeneIds = geneUniverse, 
+  suppressWarnings(goAllFrame <- GOAllFrame(goFrame))
+  gsc <- GeneSetCollection(goAllFrame, setType = GOCollection())
+  params <- GSEAGOHyperGParams("Arabidopsis thaliana GO", geneSetCollection = gsc, geneIds = selectedGeneIds, universeGeneIds = geneUniverse, 
                                           ontology = ontology, pvalueCutoff = 1, conditional = FALSE, testDirection = "over")
   
   over <- GOstats::hyperGTest(params)
-  over.df <- summary(over)
+  over.df <- as.data.frame(summary(over))
   
-  p_corrected <- p.adjust(over.df$Pvalue,method = "bonferroni")
+  p_corrected <- p.adjust(over.df$Pvalue, method = "bonferroni")
   
-  over.df <- data.frame(over.df[,1:2], p_corrected, over.df[,-(1:2)])
-  colnames(over.df)[3] <- "Pvalue.adjusted"
+  over.df <- data.frame(over.df[,1:2], Pvalue.adjusted = p_corrected, over.df[,-(1:2)])
   over.df <- over.df[order(over.df$'Pvalue.adjusted'),]
   
-  return(list( over.df,over.df[over.df$'Pvalue.adjusted' < pvalueCutoff,]))
+  return(over.df[over.df$'Pvalue.adjusted' < pvalueCutoff,])
   
 }
 

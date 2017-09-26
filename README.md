@@ -45,7 +45,9 @@ data(groupsT)
 plot_colored_dendrogram(exp_data = log10(exp.data.tpm.sum+1), groups = groupsT)
 ```
 
-![](README_files/figure-markdown_github/unnamed-chunk-1-1.png)
+    ## 
+
+![](README_files/figure-markdown_github-ascii_identifiers/unnamed-chunk-1-1.png)
 
 ### Generating PCA plot
 
@@ -53,7 +55,7 @@ plot_colored_dendrogram(exp_data = log10(exp.data.tpm.sum+1), groups = groupsT)
 plotPCA(exp_data = exp.data.tpm.sum, plot_time_points = T, groups = groupsT, do.MDS = F, cex=5, do.legend = T, log=T)
 ```
 
-![](README_files/figure-markdown_github/unnamed-chunk-2-1.png)
+![](README_files/figure-markdown_github-ascii_identifiers/unnamed-chunk-2-1.png)
 
 ### Calculate Fold changes against the intact samples
 
@@ -314,4 +316,87 @@ for(i in seq_along(intersect_lists)){
 }
 ```
 
-![](README_files/figure-markdown_github/unnamed-chunk-4-1.png)
+![](README_files/figure-markdown_github-ascii_identifiers/unnamed-chunk-4-1.png)
+
+### GO annotation
+
+##### Table S3. GO analysis for biological process (BP). Shown are the 20 BP GO terms for the grafting specific genes. Time point selected are those when there are the most genes in grafted bottom samples (48hrs) or grafted top + bottom samples (120 hrs)
+
+``` r
+data(baySeq_grafting_lists)
+data(exp.data)
+
+go_result_lists <- list()
+go_ontologies <- c("BP","MF","CC")
+geneUniverse <- rownames(exp.data)
+
+sapply(seq_along(baySeq_grafting_lists), function(i){
+  go_result_lists[[i]] <<- list() 
+  sapply(seq_along(baySeq_grafting_lists[[i]]), function(j){
+  
+    go_result_lists[[i]][[j]] <<- list() 
+    if(length(baySeq_grafting_lists[[i]][[j]]) > 0){
+      sapply(seq_along(go_ontologies), function(o){
+        
+          print(paste0(names(baySeq_grafting_lists)[i]," - ",names(baySeq_grafting_lists[[i]])[j],"hrs - ",go_ontologies[o]))
+          go_result_lists[[i]][[j]][[o]] <<- GraftingScripts::Compute_GO_Enrichment(geneUniverse = geneUniverse, selectedGeneIds = baySeq_grafting_lists[[i]][[j]], 
+                                                                                    pvalueCutoff = 0.05, ontology = go_ontologies[o])
+            
+      })
+      names(go_result_lists[[i]][[j]]) <- go_ontologies
+    }
+  })
+  names(go_result_lists[[i]]) <- names(baySeq_grafting_lists[[i]])
+})
+names(go_result_lists) <- names(baySeq_grafting_lists)
+```
+
+##### 48 hours after grafting; genes expressed only in grafted bottom samples. Top 20 BP GO terms:
+
+| GOBPID       | Pvalue   | Pvalue.adjusted | OddsRatio | ExpCount | Count | Size | Term                                           |
+|:-------------|:---------|:----------------|:----------|:---------|:------|:-----|:-----------------------------------------------|
+| <GO:0010200> | 4.77e-70 | 4.10e-67        | 3.57e+01  | 3.65e+00 | 69    | 421  | response to chitin                             |
+| <GO:0010243> | 6.10e-69 | 5.25e-66        | 3.42e+01  | 3.78e+00 | 69    | 436  | response to organonitrogen compound            |
+| <GO:1901698> | 7.30e-51 | 6.28e-48        | 1.71e+01  | 6.83e+00 | 69    | 789  | response to nitrogen compound                  |
+| <GO:0009719> | 4.14e-41 | 3.56e-38        | 9.27e+00  | 1.67e+01 | 86    | 1929 | response to endogenous stimulus                |
+| <GO:0002679> | 2.72e-37 | 2.34e-34        | 4.74e+01  | 1.05e+00 | 31    | 121  | respiratory burst involved in defense response |
+| <GO:0045730> | 2.72e-37 | 2.34e-34        | 4.74e+01  | 1.05e+00 | 31    | 121  | respiratory burst                              |
+| <GO:1901700> | 3.47e-36 | 2.98e-33        | 7.70e+00  | 2.04e+01 | 88    | 2355 | response to oxygen-containing compound         |
+| <GO:0010033> | 6.52e-34 | 5.61e-31        | 6.88e+00  | 2.47e+01 | 93    | 2851 | response to organic substance                  |
+| <GO:0006952> | 6.45e-31 | 5.54e-28        | 7.71e+00  | 1.39e+01 | 69    | 1603 | defense response                               |
+| <GO:0002376> | 1.15e-30 | 9.90e-28        | 9.53e+00  | 8.54e+00 | 56    | 986  | immune system process                          |
+| <GO:0002252> | 3.44e-29 | 2.96e-26        | 1.93e+01  | 2.42e+00 | 34    | 280  | immune effector process                        |
+| <GO:0042221> | 6.25e-26 | 5.38e-23        | 5.14e+00  | 3.26e+01 | 95    | 3760 | response to chemical                           |
+| <GO:0035556> | 3.84e-25 | 3.30e-22        | 1.28e+01  | 3.73e+00 | 36    | 431  | intracellular signal transduction              |
+| <GO:0006950> | 1.40e-21 | 1.21e-18        | 4.43e+00  | 3.35e+01 | 90    | 3872 | response to stress                             |
+| <GO:0009611> | 9.09e-21 | 7.81e-18        | 1.27e+01  | 2.90e+00 | 29    | 335  | response to wounding                           |
+| <GO:0007165> | 1.34e-20 | 1.15e-17        | 5.66e+00  | 1.36e+01 | 56    | 1576 | signal transduction                            |
+| <GO:0070887> | 6.89e-20 | 5.93e-17        | 5.90e+00  | 1.16e+01 | 51    | 1344 | cellular response to chemical stimulus         |
+| <GO:0050896> | 1.71e-19 | 1.47e-16        | 3.92e+00  | 5.53e+01 | 114   | 6386 | response to stimulus                           |
+| <GO:0044700> | 1.89e-19 | 1.63e-16        | 5.31e+00  | 1.44e+01 | 56    | 1668 | single organism signaling                      |
+| <GO:0023052> | 1.94e-19 | 1.67e-16        | 5.31e+00  | 1.45e+01 | 56    | 1669 | signaling                                      |
+
+##### 120 hours after grafting; genes expressed only in grafted top + grafted bottom samples. Top 20 BP GO terms:
+
+| GOBPID       | Pvalue   | Pvalue.adjusted | OddsRatio | ExpCount | Count | Size | Term                                                  |
+|:-------------|:---------|:----------------|:----------|:---------|:------|:-----|:------------------------------------------------------|
+| <GO:0044036> | 8.54e-11 | 9.86e-08        | 6.05e+00  | 4.33e+00 | 23    | 309  | cell wall macromolecule metabolic process             |
+| <GO:0048507> | 5.78e-10 | 6.67e-07        | 4.50e+00  | 7.02e+00 | 28    | 501  | meristem development                                  |
+| <GO:0010067> | 5.84e-10 | 6.75e-07        | 1.44e+02  | 1.26e-01 | 6     | 9    | procambium histogenesis                               |
+| <GO:0010065> | 1.44e-09 | 1.67e-06        | 1.08e+02  | 1.40e-01 | 6     | 10   | primary meristem tissue development                   |
+| <GO:0010087> | 3.45e-09 | 3.99e-06        | 1.01e+01  | 1.50e+00 | 13    | 107  | phloem or xylem histogenesis                          |
+| <GO:0010410> | 3.87e-09 | 4.47e-06        | 6.84e+00  | 2.82e+00 | 17    | 201  | hemicellulose metabolic process                       |
+| <GO:0010413> | 6.43e-09 | 7.42e-06        | 7.11e+00  | 2.55e+00 | 16    | 182  | glucuronoxylan metabolic process                      |
+| <GO:0045492> | 6.95e-09 | 8.03e-06        | 7.07e+00  | 2.57e+00 | 16    | 183  | xylan biosynthetic process                            |
+| <GO:0045491> | 8.79e-09 | 1.01e-05        | 6.95e+00  | 2.61e+00 | 16    | 186  | xylan metabolic process                               |
+| <GO:0071554> | 9.67e-09 | 1.12e-05        | 3.27e+00  | 1.24e+01 | 36    | 883  | cell wall organization or biogenesis                  |
+| <GO:0044038> | 1.72e-08 | 1.99e-05        | 6.59e+00  | 2.73e+00 | 16    | 195  | cell wall macromolecule biosynthetic process          |
+| <GO:0070592> | 1.72e-08 | 1.99e-05        | 6.59e+00  | 2.73e+00 | 16    | 195  | cell wall polysaccharide biosynthetic process         |
+| <GO:0070589> | 1.72e-08 | 1.99e-05        | 6.59e+00  | 2.73e+00 | 16    | 195  | cellular component macromolecule biosynthetic process |
+| <GO:0010014> | 1.98e-08 | 2.29e-05        | 7.07e+00  | 2.40e+00 | 15    | 171  | meristem initiation                                   |
+| <GO:0010383> | 4.80e-08 | 5.54e-05        | 5.68e+00  | 3.34e+00 | 17    | 238  | cell wall polysaccharide metabolic process            |
+| <GO:0042546> | 1.11e-07 | 1.28e-04        | 4.54e+00  | 4.86e+00 | 20    | 347  | cell wall biogenesis                                  |
+| <GO:0010075> | 1.41e-07 | 1.62e-04        | 6.54e+00  | 2.40e+00 | 14    | 171  | regulation of meristem growth                         |
+| <GO:0010051> | 1.59e-07 | 1.84e-04        | 8.99e+00  | 1.40e+00 | 11    | 100  | xylem and phloem pattern formation                    |
+| <GO:0007389> | 1.60e-07 | 1.85e-04        | 4.43e+00  | 4.98e+00 | 20    | 355  | pattern specification process                         |
+| <GO:0009933> | 1.72e-07 | 1.99e-04        | 5.16e+00  | 3.64e+00 | 17    | 260  | meristem structural organization                      |

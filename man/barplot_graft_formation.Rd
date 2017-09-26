@@ -4,22 +4,18 @@
 \alias{barplot_graft_formation}
 \title{Barplot of up- and down- regulated differentially expressed genes}
 \usage{
-barplot_up_down(up_mat, down_mat, p_val_mat, names.arg, main, labels)
+barplot_graft_formation(count_mat, pval_mat, ylab="# genes intersecting", pval_threshold = 0.05, main)
 }
 \arguments{
+\item{count_mat}{number of genes during each time point for each condition}
+
+\item{pval_mat}{matrix of p-values for each time point and each treatment. Indicating if ratio of up- and down- regulated genes is significant compared to the background.}
+
 \item{ylab}{defines the label of the y-axis}
 
+\item{pval_threshold}{p-value threshold to indocate if a p-value is significant}
+
 \item{main}{defines the title of the plot}
-
-\item{up_mat, down_mat}{(relative) number of up or down regulated genes}
-
-\item{p_val_mat}{matrix of p-values for each time point and each treatment. Indicating if ratio of up- and down- regulated genes is significant compared to the background.}
-
-\item{ylim}{defines the limits of the y-axis}
-
-\item{names.arg}{defines the names of the bars. Details: \link{barplot}}
-
-\item{labels}{defines the labels of the x-axis}
 }
 \value{
 a barplot

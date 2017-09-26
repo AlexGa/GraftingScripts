@@ -5,6 +5,7 @@ Authors@R: person("Alexander", "Gabel", email = "alexander.gabel@informatik.uni-
 Description: This is a small package allowing to reproduce the results from the manuscript 'Differential auxin and sugar responses are involved in tissue recognition and graft formation in Arabidopsis thaliana' by Charles Melnyk et al.
 Depends: R (>= 3.3.2)
 Imports: RColorBrewer (>= 1.1-2),
+         scales (>= 0.4.1),
          biomartr (>= 0.4.0),
          AnnotationDbi (>= 1.34.4),
          GO.db (>= 3.3.0),

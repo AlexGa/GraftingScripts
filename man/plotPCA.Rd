@@ -4,7 +4,7 @@
 \alias{plotPCA}
 \title{Principle component analysis (PCA) or multidimensional scaling plot between samples}
 \usage{
-plotPCA(exp_data, groups, do.legend=F, plot_time_points=F, log=T, do.MDS=F, cols=NULL, ...)
+plotPCA(exp_data, groups, do.legend=F, plot_time_points=F, log=T, do.MDS=F, cols=NULL, epsilon = 1, return_plotMatrix = FALSE, ...)
 }
 \arguments{
 \item{exp_data}{expression matrix, columns represent the samples and rows the genes (or transcripts)}
