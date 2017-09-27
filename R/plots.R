@@ -95,7 +95,6 @@ plot_colored_dendrogram <- function(exp_data, groups, method="pearson", link="av
     
     if (is.leaf(n)) {
       a <- attributes(n)
-      #print(a)
       labCol <- as.character(sample.labels.colors[a$label,2])
       if(!is.null(leaf.labels)){
         leafLab <- as.character(sample.labels.colors[a$label,1])
@@ -108,7 +107,6 @@ plot_colored_dendrogram <- function(exp_data, groups, method="pearson", link="av
     }
     else{
       if(is.leaf(n[[1]]) & is.leaf(n[[2]])){
-        # print("1")
         a <- attributes(n[[1]])
         labCol.1 <- as.character(sample.labels.colors[a$label,2])
         
@@ -127,8 +125,6 @@ plot_colored_dendrogram <- function(exp_data, groups, method="pearson", link="av
         
         a.2 <- attributes(n[[2]])
         labCol.2 <- a.2$edgePar$col
-        
-        # print("2.2")
         attr(n, "edgePar") <- list(col = labCol.1,lwd=3);
         
         if(!is.null(labCol.2)){
@@ -189,7 +185,6 @@ plot_colored_dendrogram <- function(exp_data, groups, method="pearson", link="av
     
     if(!is.leaf(n)){
       a.1 <- attributes(n[[1]])
-      # print(paste("2.1:  ",a.1$label))
       labCol.1 <- a.1$edgePar$col
       
       a.2 <- attributes(n[[2]])
