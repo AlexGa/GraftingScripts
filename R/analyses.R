@@ -98,8 +98,11 @@ do.fisher.test <- function(fc.list, fg.ids, ml.list.up, ml.list.down, fc.thresho
     bg.up_fc[l,] <- bg.sub.up.mat
     bg.down_fc[l,] <- bg.sub.down.mat
     
+    rownames(fg.up_fc) <- rownames(bg.up_fc) <- names(ml.list.up)
+    rownames(fg.down_fc) <- rownames(bg.down_fc) <- names(ml.list.down)
+    
     for(j in 1:ncol(fg.up_fc)){
-      N.table <- matrix(nrow=2,ncol=2,c(fg.up_fc[l,j], fg.down_fc[l,j], bg.up_fc[l,j], bg.down_fc[l,j]),byrow = T)
+      N.table <- matrix(nrow=2,ncol=2,c(fg.up_fc[l,j], fg.down_fc[l,j], bg.up_fc[l,j], bg.down_fc[l,j]),byrow = F)
       p.val.mat[l,j] <- fisher.test(N.table,simulate.p.value = F, alternative = alternative)$p.value
     }
   }

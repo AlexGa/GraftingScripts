@@ -3,6 +3,7 @@
 export(Compute_GO_Enrichment)
 export(adjust_and_split)
 export(barplot_graft_formation)
+export(barplot_up_down)
 export(do.fisher.test)
 export(intersect.analysis)
 export(plotPCA)

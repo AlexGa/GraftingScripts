@@ -203,7 +203,7 @@ for(fc in 1:3){
 # load genes that are symmetrically or asymmetrically expressed based on BaySeq filtering
 data(atg_list)
 data(exp.data)
-data(gene_lists)
+#data(gene_lists)
 number_genes <- nrow(exp.data)
 
 p.val.mat <- exp_num_overlap_genes <- obs_num_overlap_genes <- matrix(nrow=length(gene_lists), ncol=length(atg_list))
@@ -263,7 +263,6 @@ for(i in seq_along(gene_lists)){
    sym_asym_table_list[[i]] <- data.frame(cond_list, check.names=F)
 }
 names(sym_asym_table_list) <- names(gene_lists)
-devtools::use_data(sym_asym_table_list)
 ```
 
 ```{r results="asis", echo = FALSE}
