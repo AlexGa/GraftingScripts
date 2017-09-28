@@ -3,8 +3,8 @@ Reproducible script
 Alexander Gabel
 12 9 2017
 
-Differential auxin and sugar responses are involved in tissue recognition and graft formation in *Arabidopsis thaliana*
------------------------------------------------------------------------------------------------------------------------
+An inter-tissue recognition process and the transition from asymmetric to symmetric gene expression patterns at the Arabidopsis graft junction involves differential auxin and sugar responses
+----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
 
 ### Installation of necessary packages
 
@@ -44,8 +44,6 @@ colnames(exp.data.tpm.sum) <- gsub(pattern = "A|B", replacement = "h",
 data(groupsT)
 plot_colored_dendrogram(exp_data = log10(exp.data.tpm.sum+1), groups = groupsT)
 ```
-
-    ## 
 
 ![](README_files/figure-markdown_github-ascii_identifiers/unnamed-chunk-1-1.png)
 
@@ -107,23 +105,17 @@ for(i in seq_along(sheet_names)){
   gene_lists[[i]] <- gset
 }
 names(gene_lists) <- sheet_names
-```
-
-### Calculate transcriptional overlap plots and check significance
-
-``` r
-
-data(exp.data)
-data(fc.list)
-data(ml.list.down)
-data(ml.list.up)
 
 set.seed(10)
 gene_lists[[length(gene_lists)+1]] <- sample(250, x=rownames(exp.data))
 gene_lists[[length(gene_lists)+1]] <- sample(500, x=rownames(exp.data))
  
 names(gene_lists)[(length(gene_lists)-1):(length(gene_lists))] <- c("250_random","500_random")
+```
 
+### Calculate transcriptional overlap plots and check significance
+
+``` r
 for(fc in 1:3){
   
   plot_dir <- paste0("Histogram_abs_logfc_gt_",fc,"_and_ML_gt_0.9")
@@ -180,8 +172,6 @@ for(fc in 1:3){
 ``` r
 # load genes that are symmetrically or asymmetrically expressed based on BaySeq filtering
 data(atg_list)
-data(exp.data)
-#data(gene_lists)
 number_genes <- nrow(exp.data)
 
 p.val.mat <- exp_num_overlap_genes <- obs_num_overlap_genes <- matrix(nrow=length(gene_lists), ncol=length(atg_list))
@@ -259,7 +249,6 @@ names(sym_asym_table_list) <- names(gene_lists)
 ``` r
 data(baySeq_grafting_lists)
 data(graft_gene_lists)
-data(exp.data)
 geneUniverse <- rownames(exp.data)
 intersect_lists <- list()
 for(i in seq_along(graft_gene_lists)){
@@ -322,9 +311,6 @@ for(i in seq_along(intersect_lists)){
 ##### Table S3. GO analysis for biological process (BP). Shown are the 20 BP GO terms for the grafting specific genes. Time point selected are those when there are the most genes in grafted bottom samples (48hrs) or grafted top + bottom samples (120 hrs)
 
 ``` r
-data(baySeq_grafting_lists)
-data(exp.data)
-
 go_result_lists <- list()
 go_ontologies <- c("BP","MF","CC")
 geneUniverse <- rownames(exp.data)

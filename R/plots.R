@@ -120,7 +120,6 @@ plot_colored_dendrogram <- function(exp_data, groups, method="pearson", link="av
       if(is.leaf(n[[1]]) & !is.leaf(n[[2]])){
         
         a.1 <- attributes(n[[1]])
-        # print(paste("2.1:  ",a.1$label))
         labCol.1 <- as.character(sample.labels.colors[a.1$label,2])
         
         a.2 <- attributes(n[[2]])
@@ -135,15 +134,11 @@ plot_colored_dendrogram <- function(exp_data, groups, method="pearson", link="av
         }
       }
       if(!is.leaf(n[[1]]) & is.leaf(n[[2]])){ ## Fall tritt niemals ein, da Baum LWR-Traversiert wird
-        # print("3")
         a.2 <- attributes(n[[2]])
         labCol.2 <- as.character(sample.labels.colors[a.2$label,2])
         
         a.1 <- attributes(n[[1]])
         labCol.1 <- a.1$edgePar$col
-        
-        #attr(n, "edgePar") <- list(col = labCol.2,lwd=3);
-        #print(paste0(labCol.1," -->",labCol.2))
         if(!is.null(labCol.1)){
           
           if(labCol.1 == labCol.2){
@@ -153,12 +148,9 @@ plot_colored_dendrogram <- function(exp_data, groups, method="pearson", link="av
         }
       }
       if(!is.leaf(n[[1]]) & !is.leaf(n[[2]])){
-        # print("4")
         a.1 <- attributes(n[[1]])
         labCol.1 <- a.1$edgePar$col
-        
-        # print(labCol.1)
-        
+
         if(!is.null(labCol.1)){
           a.2 <- attributes(n[[2]])
           labCol.2 <- a.1$edgePar$col
@@ -173,13 +165,13 @@ plot_colored_dendrogram <- function(exp_data, groups, method="pearson", link="av
     }
     n
   }
-  # using dendrapply
+
   
-  clusDendro = dendrapply(hcd, colTree)
+  clusDendro <- dendrapply(hcd, colTree)
   
   rownames(sample.labels.colors) <- sample.labels.colors[,1]
   names(sample.labels) <- sample.labels.colors[,1]
-  clusDendro = dendrapply(clusDendro, colTree)
+  clusDendro <- dendrapply(clusDendro, colTree)
   
   clean.dendro <- function(n){
     
@@ -201,14 +193,14 @@ plot_colored_dendrogram <- function(exp_data, groups, method="pearson", link="av
     }
     return(n)
   }
-  clusDendro = dendrapply(clusDendro, clean.dendro)
-  clusDendro = dendrapply(clusDendro, clean.dendro)
-  clusDendro = dendrapply(clusDendro, clean.dendro)
-  clusDendro = dendrapply(clusDendro, clean.dendro)
-  clusDendro = dendrapply(clusDendro, clean.dendro)
-  clusDendro = dendrapply(clusDendro, clean.dendro)
-  clusDendro = dendrapply(clusDendro, clean.dendro)
-  clusDendro = dendrapply(clusDendro, clean.dendro)
+  clusDendro <- dendrapply(clusDendro, clean.dendro)
+  clusDendro <- dendrapply(clusDendro, clean.dendro)
+  clusDendro <- dendrapply(clusDendro, clean.dendro)
+  clusDendro <- dendrapply(clusDendro, clean.dendro)
+  clusDendro <- dendrapply(clusDendro, clean.dendro)
+  clusDendro <- dendrapply(clusDendro, clean.dendro)
+  clusDendro <- dendrapply(clusDendro, clean.dendro)
+  clusDendro <- dendrapply(clusDendro, clean.dendro)
   
   plot(as.dendrogram(clusDendro,hang = -1,check = F),...)
   if(do.legend){
