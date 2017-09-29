@@ -41,7 +41,7 @@ intersect.analysis <- function(gene.list, geneUniverse, alternative="greater"){
 #' @title Fisher test for transcriptional overlap
 #' @description Calculate significance if ratio of differentially expressed genes from a given gene set is significantly different to the ratio of differentially expressed genes in the complete dataset
 #' @author Alexander Gabel
-#' @usage do.fisher.test(fc.list, fg.ids, ml.list.up, ml.list.down, fc.threshold, ml.threshold=0.9, alternative = "two.sided")
+#' @usage do_fisher_up_down(fc.list, fg.ids, ml.list.up, ml.list.down, fc.threshold, ml.threshold=0.9, alternative = "two.sided")
 #' @param fc.list list containing the log2-foldchange matrices of treatment [grafted|separated] [top|bottom] vs. intact  
 #' @param fg.ids vector containing gene ids which shall be used for overlap analysis 
 #' @param ml.list.up list containing matrices with marginal likelihoods if a gene is up regulated
@@ -51,7 +51,7 @@ intersect.analysis <- function(gene.list, geneUniverse, alternative="greater"){
 #' @param alternative character string indicating the alternative hypothesis and must be one of "two.sided" (default), "greater", or "less". Details \link{fisher.test}
 #' @return a \code{list} 
 #' @export
-do.fisher.test <- function(fc.list, fg.ids, ml.list.up, ml.list.down, fc.threshold, ml.threshold=0.9, alternative = "two.sided"){
+do_fisher_up_down <- function(fc.list, fg.ids, ml.list.up, ml.list.down, fc.threshold, ml.threshold=0.9, alternative = "two.sided"){
   
   if(length(fc.list) == 0){
     stop("fc.list is empty", immediate. = T)
@@ -108,6 +108,27 @@ do.fisher.test <- function(fc.list, fg.ids, ml.list.up, ml.list.down, fc.thresho
   }
   
   return(list(p.val.mat=p.val.mat, fg.up_fc=fg.up_fc, fg.down_fc=fg.down_fc, fg.ids = fg.ids))
+}
+
+#' @title Fisher test to check significance of overlap
+#' @description Calculate significance of overlap between two gene sets
+#' @author Alexander Gabel
+#' @usage test_sym_asym(gene_set_1, gene_set_2, number_genes_complete, alternative = "greater")
+#' @param gene_set_1 character vector containing gene ids of first gene set
+#' @param gene_set_2 character vector containing gene ids of second gene set
+#' @param number_genes_complete number of genes in the complete dataset
+#' @param alternative character string indicating the alternative hypothesis and must be one of "two.sided" (default), "greater", or "less". Details \link{fisher.test}
+#' @export
+test_sym_asym <- function(gene_set_1, gene_set_2, number_genes_complete, alternative = "greater"){
+  
+  obs_num_overlap_genes <- length(intersect(sort(gene_set_1), sort(gene_set_2)))
+  N.table <- matrix(nrow = 2, c(number_genes_complete - length(unique(c(gene_set_2, gene_set_1))), 
+                                length(setdiff(sort(gene_set_1), sort(gene_set_2))),
+                                length(setdiff(sort(gene_set_2), sort(gene_set_1))), 
+                                obs_num_overlap_genes))
+  fisher_result <- fisher.test(N.table, alternative = alternative)
+  
+  return(fisher_result)
 }
 #' @title Plot dendrogram colored by sample definition
 #' @description Does a hierarchical clustering of the data and draws a dendrogam with colored branches and leaved based on the sample definition.

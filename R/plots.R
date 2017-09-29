@@ -12,7 +12,11 @@
 #' @param ... optional plot parameters \link{plot}
 #' @return a \code{plot} 
 #' @export
-plot_colored_dendrogram <- function(exp_data, groups, method="pearson", link="average", do.legend=F, unClusteredBranchColor="black", legend.pos = "topright", ...){
+plot_colored_dendrogram <- function(exp_data, groups, method="pearson", link="average", do.legend=F, unClusteredBranchColor="black", legend.pos = "topright", log = T, epsilon = 1, ...){
+  
+  if(log){
+    exp_data <- log10(exp_data + epsilon)  
+  }
   
   if(!is.factor(groups)){
     groups <- factor(groups)
@@ -298,7 +302,7 @@ plotPCA <- function(exp_data, groups, do.legend=F, plot_time_points=F, log=T, do
 #' @title Barplot of up- and down- regulated differentially expressed genes 
 #' @description Plots the relative or absolute number of up- and down- regulated genes and a asterisks if the ratio is significant 
 #' @author Alexander Gabel
-#' @usage barplot_up_down(up_mat, down_mat, p_val_mat, names.arg, main, labels)
+#' @usage barplot_up_down(up_mat, down_mat, p_val_mat, ylim = c(-1.2,1.45), names.arg, main, labels, ylab="Proportion of overlap")
 #' @param up_mat,down_mat (relative) number of up or down regulated genes
 #' @param p_val_mat matrix of p-values for each time point and each treatment. Indicating if ratio of up- and down- regulated genes is significant compared to the background.
 #' @param ylim defines the limits of the y-axis
