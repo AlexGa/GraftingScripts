@@ -4,7 +4,7 @@
 \alias{barplot_up_down}
 \title{Barplot of up- and down- regulated differentially expressed genes}
 \usage{
-barplot_up_down(up_mat, down_mat, p_val_mat, names.arg, main, labels)
+barplot_up_down(up_mat, down_mat, p_val_mat, ylim = c(-1.2,1.45), names.arg, main, labels, ylab="Proportion of overlap")
 }
 \arguments{
 \item{up_mat, down_mat}{(relative) number of up or down regulated genes}
