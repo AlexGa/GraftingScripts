@@ -86,7 +86,7 @@ data(ml.list.down)
 In this step we load the gene sets from previously published datasets which we investigated in our study. In this code snippet we extract all ids from the excel sheets and put them into our `gene_list`. If the ids seem to be probe ids we use the [biomartR](https://academic.oup.com/bioinformatics/article-lookup/doi/10.1093/bioinformatics/btw821) package to match the corresponding gene id to the probe id. After all gene sets are in the list we add two additional random lists, which later should not show any statistical significance. The `gene_list` object is stored in the GraftingScripts package and can be loaded by `data(gene_lists)`.
 
 ``` r
-xl_file <- "data/all_gene_subsets_from_manuscript_original.xlsx"
+xl_file <- system.file("extdata", "all_gene_subsets_from_manuscript_original.xlsx", package="GraftingScripts") 
 sheet_names <- excel_sheets(xl_file)
 gene_lists <- list()
 
@@ -176,7 +176,7 @@ for(fc in 1:3){
 }
 ```
 
-![](README_files/figure-markdown_github-ascii_identifiers/Histogram_B%203h%20Glucose%20induced_abs_logFC_gt_1_ml_gt_09_relative_trans.png)
+![](README_files/figure-markdown_github-ascii_identifiers/barplot_up_down_example.png)
 
 ### Defining symmetrically and asymmetrically expressed genes (Table 1)
 
