@@ -9,7 +9,7 @@ output: github_document
 knitr::opts_chunk$set(echo = TRUE)
 ```
 
-## An inter-tissue recognition process and the transition from asymmetric to symmetric gene expression patterns at the Arabidopsis graft junction involves differential auxin and sugar responses
+Melnyk C W, Gabel A, Hardcastle T J, Robinson S, Miyashima S, Grosse I, Meyerowitz E. __An inter-tissue recognition process and the transition from asymmetric to symmetric gene expression patterns at the Arabidopsis graft junction involves differential auxin and sugar responses__.
 
 ### Installation of necessary packages
 
@@ -20,6 +20,7 @@ install.packages("devtools")
 install.packages("readxl")
 devtools::install_github("GraftingScripts")
 library(GraftingScripts)
+library(readxl)
 ```
 
 ### Load expression data
@@ -43,13 +44,15 @@ colnames(exp.data.tpm.sum) <- gsub(pattern = "A|B", replacement = "h",
 
 ### Generating dendrogram based on summarized replicates
 
+To visualize the similarity of the different samples (conditions) we calculated the *pearson* correlation coefficient between each sample and used the measure 1-correlation as a similarity score to perform a hierarchical clustering.
+The following code snippet applies the *plot_colored_dendrogram* function to perform these calculations and plot the resulting dendrogram. The data *groupS* is necessary for the function for later color coding the different samples in the tree.
 ```r
-data(groupsT)
-plot_colored_dendrogram(exp_data = log10(exp.data.tpm.sum+1), groups = groupsT)
+data(groupS)
+plot_colored_dendrogram(exp_data = exp.data.tpm.sum, groups = groupS)
 ```
 
 ```{r, comment=NA, echo=FALSE}
-data(groupsT)
+data(groupS)
 data(exp.data)
 exp.data.tpm <- apply(exp.data,2,function(i)i/sum(i)*10^6)
 exp.data.tpm.sum <- sapply(seq(1,by=2,length.out=ncol(exp.data)/2),function(i){
@@ -60,17 +63,18 @@ exp.data.tpm.sum <- sapply(seq(1,by=2,length.out=ncol(exp.data)/2),function(i){
 colnames(exp.data.tpm.sum) <- gsub(pattern = "A|B", replacement = "h", 
                                    x = colnames(exp.data)[seq(1, by=2, length.out = ncol(exp.data)/2)])
 par(mar=c(10,4.1,2.1,2.1))
-GraftingScripts::plot_colored_dendrogram(exp_data = log10(exp.data.tpm.sum+1), groups = groupsT)
+GraftingScripts::plot_colored_dendrogram(exp_data = exp.data.tpm.sum, groups = groupS)
 ```
 
 ### Generating PCA plot
 
+Another way of visualizing the data and how the different samples cluster is the principle component analysis, which can be applied by the following function call. Alternatively to the PCA this function can also generate a MDS plot if the parameter *do.MDS = TRUE*. 
 ```r
-GraftingScripts::plotPCA(exp_data = exp.data.tpm.sum, plot_time_points = T, groups = groupsT, do.MDS = F, cex=5, do.legend = T, log=T)
+GraftingScripts::plotPCA(exp_data = exp.data.tpm.sum, plot_time_points = T, groups = groupS, do.MDS = F, cex=5, do.legend = T, log=T)
 ```
 
 ```{r, echo=FALSE}
-data(groupsT)
+data(groupS)
 data("exp.data")
 exp.data.tpm <- apply(exp.data,2,function(i)i/sum(i)*10^6)
 exp.data.tpm.sum <- sapply(seq(1,by=2,length.out=ncol(exp.data)/2),function(i){
@@ -81,11 +85,12 @@ exp.data.tpm.sum <- sapply(seq(1,by=2,length.out=ncol(exp.data)/2),function(i){
 colnames(exp.data.tpm.sum) <- gsub(pattern = "A|B", replacement = "h", 
                                    x = colnames(exp.data)[seq(1, by=2, length.out = ncol(exp.data)/2)])
 par(mar=c(4.1,4.1,2.1,2.1), mgp=c(2.5,1,0))
-GraftingScripts::plotPCA(exp_data = exp.data.tpm.sum, plot_time_points = T, groups = groupsT, do.MDS = F, cex=5, do.legend = T, log=T)
+GraftingScripts::plotPCA(exp_data = exp.data.tpm.sum, plot_time_points = T, groups = groupS, do.MDS = F, cex=5, do.legend = T, log=T)
 ```
 
 ### Calculate Fold changes against the intact samples
 
+In the next step we calculated for each time point of the grafted and separated samples the foldchanges to the corresponding intact samples, beginning at 6 hours after separation/grafting.
 ```r
 fc.exp.data <- exp.data.sum[,-which(colnames(exp.data.sum.tpm) %in% "0h Intact")]
 fc.list <- list()
@@ -97,6 +102,7 @@ for(i in 1:(ncol(fc.exp.data)/8-1)){
 names(fc.list) <- unique(unlist(lapply(strsplit(x=colnames(fc.exp.data),split=" "),function(i)paste(i[-1],collapse = " "))))[-1]
 ```
 
+For the definition of differentially expression we used additionally the marginal likelihoods from our [baySeq](https://www.bioconductor.org/packages/release/bioc/html/baySeq.html) analysis. The data is stored in two lists `ml.list.up` containing the marginal likelihoods of grafted and separated samples in the case that they are upregulated compared to the intact samples. The list `ml.list.down` contains the marginal likelihoodsin the case that the grafted or separated samples are downregulated compared to the intact samples. 
 ### Integrate the marginal likelihoods from BaySeq
 ```r
 data(ml.list.up)
@@ -104,9 +110,13 @@ data(ml.list.down)
 ```
 
 ### Load the gene sets from previous publications
+
+In this step we load the gene sets from previously published datasets which we investigated in our study. In this code snippet we extract all ids from the excel sheets and put them into our `gene_list`. If the ids seem to be probe ids we use the [biomartR](https://academic.oup.com/bioinformatics/article-lookup/doi/10.1093/bioinformatics/btw821) package to match the corresponding gene id to the probe id. 
+After all gene sets are in the list we add two additional random lists, which later should not show any statistical significance.
+The `gene_list` object is stored in the GraftingScripts package and can be loaded by `data(gene_lists)`.
+
 ```r
-library(readxl)
-xl_file <- "data/all_gene_subsets_from_manuscript_original.xlsx"
+xl_file <- system.file("extdata", "all_gene_subsets_from_manuscript_original.xlsx", package="GraftingScripts") 
 sheet_names <- excel_sheets(xl_file)
 gene_lists <- list()
 
@@ -141,6 +151,11 @@ names(gene_lists)[(length(gene_lists)-1):(length(gene_lists))] <- c("250_random"
 ```
 
 ### Calculate transcriptional overlap plots and check significance
+
+
+In this step we calculate the transcriptional overlap of up- and down- regulated genes from previously published datasets compared to our transcriptome dataset. First, we defined a foldchange threshold and a marginal likelihood threshold to define if a gene is differentially expressed. Afterwards we go through the lists of published gene sets and take only those genes which are differentially expressed in our dataset. Second, we tested if the ratio of up- and down- regulated differentially expressed genes in a published is significantly different to the ratio of up- and down- regulated genes in the complete transcriptome dataset. This is done by the function `do_fisher_up_down`. 
+After all test are performed and all p-values are calculated we correct fo multiple testing with the Benjamini-Yekutieli method. This is done by applying the function `adjust_and_split` which summarizes all p-values, correct them and split the p-values to their original gene list.
+When all tests are done we call `barplot_up_down` to visualize the transcriptional overlap which means we plot the relative number of published genes which are actually differentially expressed in our dataset.
 ```r
 for(fc in 1:3){
   
@@ -153,7 +168,7 @@ for(fc in 1:3){
   fisher_res_list <- p_val_list <- list()
   
   for(i in seq_along(gene_lists)){
-    fisher_res_list[[i]] <- do.fisher.test(fc.list, fg.ids=gene_lists[[i]], ml.list.up, ml.list.down, 
+    fisher_res_list[[i]] <- do_fisher_up_down(fc.list, fg.ids=gene_lists[[i]], ml.list.up, ml.list.down, 
                                            fc.threshold = fc, ml.threshold=0.9, alternative = "two.sided")
     p_val_list[[i]] <- fisher_res_list[[i]]$p.val.mat
   }
@@ -192,15 +207,20 @@ for(fc in 1:3){
   }
 }
 ```
+![](README_files/figure-markdown_github-ascii_identifiers/Histogram_B 3h Glucose induced_abs_logFC_gt_1_ml_gt_09_relative_trans.png)
 
 ### Defining symmetrically and asymmetrically expressed genes (Table 1)
+
+In this step we are interested in the number of genes from previous publications that are overlapping with symmetrically and asymmetrically expressed genes in our dataset defined by a [baySeq](http://www.biorxiv.org/content/early/2017/09/01/183533) clustering.
+The results from this baySeq analysis can be found in the object `sym_asym_bS`. In the next lines we use each published geneset and calculate the number of intersecting genes with the baySeq clustering. The object overlap_stats contains the results from the Fisher's exact test, which was used to test if the number of overlapping genes is higher than expected. The resulting p-values from all tests were aagin summarized and corrected against multiple testing with the the *Benjamini-Yekutieli* method. 
+In the last loop of this code snippet the results were summarized in a table and each table is stored in the list `sym_asym_table_list` which can also be loaded from the GraftingScripts package.
 ```r
 # load genes that are symmetrically or asymmetrically expressed based on BaySeq filtering
-data(atg_list)
+data(sym_asym_bS)
 number_genes <- nrow(exp.data)
 
-p.val.mat <- exp_num_overlap_genes <- obs_num_overlap_genes <- matrix(nrow=length(gene_lists), ncol=length(atg_list))
-num_gene_atg_list <- unlist(lapply(atg_list, length))
+p.val.mat <- exp_num_overlap_genes <- obs_num_overlap_genes <- matrix(nrow=length(gene_lists), ncol=length(sym_asym_bS))
+num_gene_sym_asym_bS <- unlist(lapply(sym_asym_bS, length))
 
 for(i in seq_along(gene_lists)){
 
@@ -208,18 +228,13 @@ for(i in seq_along(gene_lists)){
   gset <- gene_lists[i]
   
   print(glist_name)
-  for(j in seq_along(atg_list)){
+  for(j in seq_along(sym_asym_bS)){
   
-    obs_num_overlap_genes[i,j] <- length(intersect(sort(gene_lists[[i]]), sort(atg_list[[j]])))
-    N.table <- matrix(nrow = 2, c(number_genes - length(unique(c(atg_list[[j]], gene_lists[[i]]))), 
-                        length(setdiff(sort(gene_lists[[i]]), sort(atg_list[[j]]))),
-                        length(setdiff(sort(atg_list[[j]]), sort(gene_lists[[i]]))), 
-                        obs_num_overlap_genes[i,j]))
-
-    p.val.mat[i,j] <- fisher.test(N.table, alternative = "greater")$p.value
+    overlap_stats <- test_sym_asym(gene_set_1 = gene_lists[[i]], gene_set_2 = sym_asym_bS[[j]], number_genes_complete = number_genes, alternative = "greater")
+    p.val.mat[i,j] <- overlap_stats$p.value
   }
 }
-colnames(p.val.mat) <- names(atg_list)
+colnames(p.val.mat) <- names(sym_asym_bS)
 rownames(p.val.mat) <- names(gene_lists)
 
 # Correction of p-values
@@ -242,10 +257,11 @@ for(i in seq_along(gene_lists)){
   for(cond in seq_along(baySeq_conditions)){
   
     indices <- grepl(x = colnames(p.adjusted.mat), pattern = baySeq_conditions[cond])
-    cond_list[[cond]] <- data.frame(HAG=unlist(lapply(strsplit(x = grep(x = colnames(p.adjusted.mat), pattern = baySeq_conditions[cond], value = T), 
-                                                               split = "_"), function(c_name)c_name[1])),
+    cond_list[[cond]] <- data.frame(HAG = unlist(lapply(strsplit(x = grep(x = colnames(p.adjusted.mat), 
+                                                                          pattern = baySeq_conditions[cond], value = T), 
+                                                                 split = "_"), function(c_name)c_name[1])),
                                     Treatment = rep(length(gene_lists[[i]]),8),
-                                    baySeq_Condition = num_gene_atg_list[indices],
+                                    baySeq_Condition = num_gene_sym_asym_bS[indices],
                                     Overlap = obs_num_overlap_genes[i, indices], 
                                     check.names = F)
     cond_list[[cond]] <- data.frame(cond_list[[cond]], '%' = round((cond_list[[cond]]$Overlap/cond_list[[cond]]$baySeq_Condition)*100), check.names=F )
@@ -264,7 +280,9 @@ knitr::kable(sym_asym_table_list$S2_S3h_CSt3h_down, caption = "Table 1", row.nam
 ```
 
 ### Expression of DEGs during graft formation
-
+In this step we were interested in genes that are specifically expressed in grafted top, grafted bottom and grafted bottom and top. These three gene sets were also determined by baySeq and can be found in the object `baySeq_grafting_lists`. The aim was now to use these gene sets and find an overlap to previously published datasets of graft formation studies.
+The procedure is almost the same as in the previous step. We took each of the gene sets from graft formation studies and calculated for each time point the overlap to baySeq clusters of graft specific differentially expressed genes. To test if the overlap is significant we used the same Fisher's exact test as in the previous step and performed after all tests the Benjamini-Yekutieli correction method.
+After the siginicances are calculated we apply the function `barplot_graft_formation` to visualize the number of overlapping genes from each publication with the grafting clusters defined by baySeq at each given time point.
 ```r
 data(baySeq_grafting_lists)
 data(graft_gene_lists)
@@ -331,6 +349,9 @@ GraftingScripts::barplot_graft_formation(count_mat = intersect_lists_graft_forma
 
 ### GO annotation 
 
+The GO enrichment analysis is the last step of this script. Here we used each by *baySeq* predefined cluster of grafted top, grafted bottom, and grafted top and bottom gene set at each time point and determined the corresponding GO terms. To test if a certain GO term is significantly enriched in a defined gene set we used the hypergeometric test from the R package [GOstats](https://www.bioconductor.org/packages/release/bioc/html/GOstats.html) to calculate the corresponding p-value. After all GO terms were tested against a gene set, we used the *Bonferroni* method to correct against multiple testing.
+To call a GO term significant enriched the adjusted p-value had to be smaller than 0.05.
+The results of the GO enrichment analysis can be loaded with `data(go_result_lists)`.
 ##### Table S3. GO analysis for biological process (BP). Shown are the 20 BP GO terms for the grafting specific genes. Time point selected are those when there are the most genes in grafted bottom samples (48hrs) or grafted top + bottom samples (120 hrs)
 ```r
 go_result_lists <- list()
