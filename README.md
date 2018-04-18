@@ -1,9 +1,9 @@
-Reproducible script
+Reproducible script for the publication
 ================
 Alexander Gabel
 12 9 2017
 
-Melnyk C W, Gabel A, Hardcastle T J, Robinson S, Miyashima S, Grosse I, Meyerowitz E. **An inter-tissue recognition process and the transition from asymmetric to symmetric gene expression patterns at the *Arabidopsis* graft junction involves differential auxin and sugar responses**.
+Charles W. Melnyk, Alexander Gabel, Thomas J. Hardcastle, Sarah Robinson, Shunsuke Miyashima, Ivo Grosse and Elliot M. Meyerowitz. **Transcriptome dynamics at *Arabidopsis* graft junctions reveal an intertissue recognition mechanism that activates vascular regeneration**. PNAS. (2018). <https://doi.org/10.1073/pnas.1718263115>.
 
 Contents
 --------
