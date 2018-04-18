@@ -110,7 +110,7 @@ GraftingScripts::plotPCA(exp_data = exp.data.tpm.sum, plot_time_points = T, grou
 
 In the next step we calculated for each time point of the grafted and separated samples the foldchanges to the corresponding intact samples, beginning at 6 hours after separation/grafting.
 ```r
-fc.exp.data <- exp.data.sum[,-which(colnames(exp.data.sum.tpm) %in% "0h Intact")]
+fc.exp.data <- exp.data.tpm.sum[,-which(colnames(exp.data.tpm.sum) %in% "0h Intact")]
 fc.list <- list()
 sample.Indices <- 9:16
 for(i in 1:(ncol(fc.exp.data)/8-1)){
@@ -175,54 +175,52 @@ In this step we calculate the transcriptional overlap of up- and down- regulated
 After all test are performed and all p-values are calculated we correct fo multiple testing with the Benjamini-Yekutieli method. This is done by applying the function `adjust_and_split` which summarizes all p-values, correct them and split the p-values to their original gene list.
 When all tests are done we call `barplot_up_down` to visualize the transcriptional overlap which means we plot the relative number of published genes which are actually differentially expressed in our dataset.
 ```r
-for(fc in 1:3){
-  
-  plot_dir <- paste0("Histogram_abs_logfc_gt_",fc,"_and_ML_gt_0.9")
-  
-  if(!file.exists(plot_dir)){
-    dir.create(plot_dir)
-  }
-  
-  fisher_res_list <- p_val_list <- list()
-  
-  for(i in seq_along(gene_lists)){
-    fisher_res_list[[i]] <- do_fisher_up_down(fc.list, fg.ids=gene_lists[[i]], ml.list.up, ml.list.down, 
-                                           fc.threshold = fc, ml.threshold=0.9, alternative = "two.sided")
-    p_val_list[[i]] <- fisher_res_list[[i]]$p.val.mat
-  }
-  
-  names(fisher_res_list) <- names(p_val_list) <- names(gene_lists)
-  # adjusting p-values with Benjamini & Yekutieli
-  adjusted_p_mat_list <- adjust_and_split(p_val_list, "BY")
-  names(adjusted_p_mat_list) <- names(p_val_list)
-  
-  for(i in seq_along(gene_lists)){
-    
-    glist_name <- names(gene_lists)[i]
-    
-    up_fc <- fisher_res_list[[i]]$fg.up_fc
-    down_fc <- -fisher_res_list[[i]]$fg.down_fc
-    
-    rownames(up_fc) <- names(ml.list.up)
-    rownames(down_fc) <- names(ml.list.down)
-    
-    rel_up_mat <- t(up_fc/length(fisher_res_list[[i]]$fg.ids))
-    rel_down_mat <- t(down_fc/length(fisher_res_list[[i]]$fg.ids))
-    
-    names_arg <- gsub(pattern = " ",replacement = "\n",rownames(up_fc))
-    rect_names <- unlist(lapply(strsplit(colnames(fc.list[[1]])," "),function(l)l[1]))
-    
-    mainText <- paste0(glist_name," (",length(fisher_res_list[[i]]$fg.ids)," genes)")
-    
-    filename_prefix <- paste0(plot_dir,"/Histogram_", glist_name)
+fc <- 1
 
-    pdf(paste0(filename_prefix,"_abs_logFC_gt_",fc,"_ml_gt_09.pdf"),width = 9,height = 6)
+plot_dir <- paste0("Histogram_abs_logfc_gt_",fc,"_and_ML_gt_0.9")
+
+if(!file.exists(plot_dir)){
+  dir.create(plot_dir)
+}
+
+fisher_res_list <- p_val_list <- list()
+
+for(i in seq_along(gene_lists)){
+  fisher_res_list[[i]] <- do_fisher_up_down(fc.list, fg.ids=gene_lists[[i]], ml.list.up, ml.list.down, 
+  fc.threshold = fc, ml.threshold=0.9, alternative = "two.sided")
+  p_val_list[[i]] <- fisher_res_list[[i]]$p.val.mat
+}
+
+names(fisher_res_list) <- names(p_val_list) <- names(gene_lists)
+# adjusting p-values with Benjamini & Yekutieli
+adjusted_p_mat_list <- adjust_and_split(p_val_list, "BY")
+names(adjusted_p_mat_list) <- names(p_val_list)
+
+for(i in seq_along(gene_lists)){
+
+  glist_name <- names(gene_lists)[i]
+
+  up_fc <- fisher_res_list[[i]]$fg.up_fc
+  down_fc <- -fisher_res_list[[i]]$fg.down_fc
+
+  rownames(up_fc) <- names(ml.list.up)
+  rownames(down_fc) <- names(ml.list.down)
+
+  rel_up_mat <- t(up_fc/length(fisher_res_list[[i]]$fg.ids))
+  rel_down_mat <- t(down_fc/length(fisher_res_list[[i]]$fg.ids))
+
+  names_arg <- gsub(pattern = " ",replacement = "\n",rownames(up_fc))
+  rect_names <- unlist(lapply(strsplit(colnames(fc.list[[1]])," "),function(l)l[1]))
+
+  mainText <- paste0(glist_name," (",length(fisher_res_list[[i]]$fg.ids)," genes)")
+
+  filename_prefix <- paste0(plot_dir,"/Histogram_", glist_name)
+
+  pdf(paste0(filename_prefix,"_abs_logFC_gt_",fc,"_ml_gt_09.pdf"),width = 9,height = 6)
     par(mar=c(3.1,4.1,3.1,.1), cex=1.5)
     barplot_up_down(up_mat = rel_up_mat, down_mat = rel_down_mat, p_val_mat = adjusted_p_mat_list[[i]], names.arg = rep(rect_names,4), 
-                    main = mainText, labels = names_arg)
-    dev.off()
-    
-  }
+    main = mainText, labels = names_arg)
+  dev.off()
 }
 ```
 
